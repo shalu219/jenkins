@@ -1,9 +1,11 @@
 pipeline {
+    /*A declarative pipeline*/
+
     agent any
     parameters {
         string(name: 'patchBranch', defaultValue: 'master', description: 'Hot Fix branch. (Please do not put "origin" with branch name)')
-        choice(name: 'buildModule', choices: ['PS:persistenceserver', 'SDS:staticdataserver', 'FG:fixgateway', 'CE:creditengine', 'XE:crossingengine', 'FH:mktdatafeedhandler', 'TDB:tradedbwriter', 'TN:tradenotification', 'RG:rest_gateway', 'FM:fixmultiplexer'], description: '')
-        choice(name: 'env', choices: ['development', 'qa', 'uat', 'prod'], description: '')
+        choice(name: 'buildModule', choices: ['', 'PS:persistenceserver', 'SDS:staticdataserver', 'FG:fixgateway', 'CE:creditengine', 'XE:crossingengine', 'FH:mktdatafeedhandler', 'TDB:tradedbwriter', 'TN:tradenotification', 'RG:rest_gateway', 'FM:fixmultiplexer'], description: '')
+        choice(name: 'env', choices: ['', 'development', 'qa', 'uat', 'prod'], description: '')
     }
 
     stages {
@@ -18,10 +20,22 @@ pipeline {
                     exit 1
                 fi
                 echo "<<${patchBranch}>><<${buildModule}>><<${env}>>"
-                #app=`echo ${buildModule} | cut -d ":" -f1`
-                sh 'subModule=`echo ${buildModule} | cut -d ":" -f2`'
                 '''
             }
+        }
+
+        stage('Initialize the variables') {
+            steps{
+                script{
+                    app=`echo ${buildModule} | cut -d ":" -f1`
+                    subModule=`echo ${buildModule} | cut -d ":" -f2`
+                    SOURCE_DIR="**/**/rpm/**/RPMS/*"
+                    TARGET_BUCKET="liquimatch-${env}-repo"
+                    ROLLBACK_DIR="/rpm/rollback/qa/ogguniverse"
+                    TARGET_DIR="/rpm/${TARGET_BUCKET}"
+                    CACHE_DIR="${TARGET_DIR}/dev-cache"
+                }
+            }                
         }
         
         stage('Checkout branch') {
@@ -32,7 +46,9 @@ pipeline {
                 repo forall -c "git checkout master"
                 repo forall -c "git pull"
 
-                sh 'tagExist=$(git -C ./${subModule} branch -a | grep ${patchBranch} | tr -d " ")'
+                script{
+                    tagExist=$(git -C ./${subModule} branch -a | grep ${patchBranch} | tr -d " ")
+                }
                 echo "tagExist=${tagExist}"
 
                 if [ ! -z "$tagExist" ]; then
