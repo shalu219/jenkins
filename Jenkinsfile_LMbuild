@@ -1,17 +1,60 @@
 pipeline {
     agent any
+    parameters {
+        string(name: 'patchBranch', defaultValue: 'master', description: 'Hot Fix branch. (Please don't put "origin" with branch name)')
+        choice(name: 'buildModule', choices: [''PS:persistenceserver', 'SDS:staticdataserver', 'FG:fixgateway', 'CE:creditengine', 'XE:crossingengine', 'FH:mktdatafeedhandler', 'TDB:tradedbwriter', 'TN:tradenotification', 'RG:rest_gateway', 'FM:fixmultiplexer'], description: '')
+        choice(name: 'env', choices: ['development', 'qa', 'uat', 'prod'], description: '')
+    }
 
     stages {
-        stage('Build LM subModule') {
+        stage('Verifying inputs') {
             steps {
-                echo 'Building LM subModule....'
+                if [ -z "$patchBranch" ] || [ -z "$buildModule" ] || [ -z "$env" ]; then
+                    echo
+                    echo "ERROR"
+                    echo "Parameters can not be empty."
+                    echo "<<$patchBranch>><<$buildModule>><<$env>>"
+                    exit 1
+                fi
+                echo "<<$patchBranch>><<$buildModule>><<$env>>"
+                #app=`echo ${buildModule} | cut -d ":" -f1`
+                subModule=`echo ${buildModule} | cut -d ":" -f2`
             }
         }
+        
+        stage('Build LM ${subModule}') {
+            steps {
+                echo 'Building LM ${subModule}....'
+                sh 'mvn --version'
+                repo init -u git@github.com:otcxn/otcxn-rfq-build.git -b ogg_universe -m default.xml
+                repo sync
+                repo forall -c "git checkout master"
+                repo forall -c "git pull"
+
+                tagExist=$(git -C ./${subModule} branch -a | grep $patchBranch | tr -d " ")
+                echo "tagExist=${tagExist}"
+
+                if [ ! -z "$tagExist" ]; then
+                    repo forall ${subModule} -c "git checkout origin/${patchBranch}"
+                    if [ "$?" != "0" ]; then
+                      echo
+                      echo "ERROR: $patchBranch is not applied in the module"
+                      exit 1
+                    fi
+                fi
+                
+                echo "BUILDING 'mvn clean deploy'"
+                mvn clean deploy -pl ${subModule} -DskipTests -U -s ~/.m2/settings.xml --also-make
+            }
+        }
+
         stage('Publish') {
             steps {
-                echo 'Publishing to environment..'
+                echo 'Publishing to ${env}..'
+
             }
         }
+        
         stage('Deploy') {
             steps {
                 echo 'Deploying....'
