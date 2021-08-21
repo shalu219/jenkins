@@ -26,6 +26,7 @@ pipeline {
 
         stage('Initialize the variables') {
             steps{
+                sh '''#!/bin/bash
                 script{
                     app=`echo ${buildModule} | cut -d ":" -f1`
                     subModule=`echo ${buildModule} | cut -d ":" -f2`
@@ -35,6 +36,7 @@ pipeline {
                     TARGET_DIR="/rpm/${TARGET_BUCKET}"
                     CACHE_DIR="${TARGET_DIR}/dev-cache"
                 }
+                '''
             }                
         }
         
