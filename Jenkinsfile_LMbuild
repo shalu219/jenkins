@@ -9,6 +9,7 @@ pipeline {
     stages {
         stage('Verifying inputs') {
             steps {
+                sh '''#!/bin/bash
                 if [ -z "$patchBranch" ] || [ -z "$buildModule" ] || [ -z "$env" ]; then
                     echo
                     echo "ERROR"
@@ -19,11 +20,13 @@ pipeline {
                 echo "<<$patchBranch>><<$buildModule>><<$env>>"
                 #app=`echo ${buildModule} | cut -d ":" -f1`
                 subModule=`echo ${buildModule} | cut -d ":" -f2`
+                '''
             }
         }
         
         stage('Build LM ${subModule}') {
             steps {
+                sh '''#!/bin/bash
                 echo 'Building LM ${subModule}....'
                 sh 'mvn --version'
                 repo init -u git@github.com:otcxn/otcxn-rfq-build.git -b ogg_universe -m default.xml
@@ -45,19 +48,25 @@ pipeline {
                 
                 echo "BUILDING 'mvn clean deploy'"
                 mvn clean deploy -pl ${subModule} -DskipTests -U -s ~/.m2/settings.xml --also-make
+                '''
             }
         }
 
         stage('Publish') {
             steps {
+                sh '''#!/bin/bash
                 echo 'Publishing to ${env}..'
-
+                
+                '''
             }
         }
         
         stage('Deploy') {
             steps {
+                sh '''#!/bin/bash
                 echo 'Deploying....'
+                
+                '''
             }
         }
 
