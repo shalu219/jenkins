@@ -7,47 +7,54 @@ pipeline {
     }
 
     stages {
-        stage('Verifying inputs') {
+        stage('Verify inputs') {
             steps {
                 sh '''#!/bin/bash
-                if [ -z "$patchBranch" ] || [ -z "$buildModule" ] || [ -z "$env" ]; then
+                if [ -z "${patchBranch}" ] || [ -z "${buildModule}" ] || [ -z "${env}" ]; then
                     echo
                     echo "ERROR"
                     echo "Parameters can not be empty."
-                    echo "<<$patchBranch>><<$buildModule>><<$env>>"
+                    echo "<<${patchBranch}>><<${buildModule}>><<${env}>>"
                     exit 1
                 fi
-                echo "<<$patchBranch>><<$buildModule>><<$env>>"
+                echo "<<${patchBranch}>><<${buildModule}>><<${env}>>"
                 #app=`echo ${buildModule} | cut -d ":" -f1`
                 subModule=`echo ${buildModule} | cut -d ":" -f2`
                 '''
             }
         }
         
-        stage('Build LM ${subModule}') {
+        stage('Checkout branch') {
             steps {
                 sh '''#!/bin/bash
-                echo 'Building LM ${subModule}....'
-                sh 'mvn --version'
                 repo init -u git@github.com:otcxn/otcxn-rfq-build.git -b ogg_universe -m default.xml
                 repo sync
                 repo forall -c "git checkout master"
                 repo forall -c "git pull"
 
-                tagExist=$(git -C ./${subModule} branch -a | grep $patchBranch | tr -d " ")
+                tagExist=$(git -C ./${subModule} branch -a | grep ${patchBranch} | tr -d " ")
                 echo "tagExist=${tagExist}"
 
                 if [ ! -z "$tagExist" ]; then
                     repo forall ${subModule} -c "git checkout origin/${patchBranch}"
                     if [ "$?" != "0" ]; then
                       echo
-                      echo "ERROR: $patchBranch is not applied in the module"
+                      echo "ERROR: ${patchBranch} is not applied in the module"
                       exit 1
                     fi
                 fi
-                
+                '''
+            }
+        }
+
+        stage('Build subModule') {
+            steps {
+                sh '''#!/bin/bash
+                echo 'Building LM ${subModule}....'
+                sh 'mvn --version'
+
                 echo "BUILDING 'mvn clean deploy'"
-                mvn clean deploy -pl ${subModule} -DskipTests -U -s ~/.m2/settings.xml --also-make
+                sh 'mvn clean deploy -pl ${subModule} -DskipTests -U -s ~/.m2/settings.xml --also-make'
                 '''
             }
         }
