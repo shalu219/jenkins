@@ -2,7 +2,7 @@ pipeline {
     agent any
     parameters {
         string(name: 'patchBranch', defaultValue: 'master', description: 'Hot Fix branch. (Please do not put "origin" with branch name)')
-        choice(name: 'buildModule', choices: [''PS:persistenceserver', 'SDS:staticdataserver', 'FG:fixgateway', 'CE:creditengine', 'XE:crossingengine', 'FH:mktdatafeedhandler', 'TDB:tradedbwriter', 'TN:tradenotification', 'RG:rest_gateway', 'FM:fixmultiplexer'], description: '')
+        choice(name: 'buildModule', choices: ['PS:persistenceserver', 'SDS:staticdataserver', 'FG:fixgateway', 'CE:creditengine', 'XE:crossingengine', 'FH:mktdatafeedhandler', 'TDB:tradedbwriter', 'TN:tradenotification', 'RG:rest_gateway', 'FM:fixmultiplexer'], description: '')
         choice(name: 'env', choices: ['development', 'qa', 'uat', 'prod'], description: '')
     }
 
