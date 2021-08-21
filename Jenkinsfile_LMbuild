@@ -1,0 +1,22 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Build LM subModule') {
+            steps {
+                echo 'Building LM subModule....'
+            }
+        }
+        stage('Publish') {
+            steps {
+                echo 'Publishing to environment..'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying....'
+            }
+        }
+
+    }
+}
