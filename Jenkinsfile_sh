@@ -1,0 +1,28 @@
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                sh 'echo "Hello World"'
+                sh '''
+                    echo "Multiline shell steps works too"
+                    ls -lah
+                '''
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'echo "Check Deploy"'
+                sh '''
+                #!/bin/bash
+                repo init -u git@github.com:otcxn/otcxn-rfq-build.git -b ogg_universe -m default.xml
+                repo sync
+                repo forall -c "git checkout master"
+                repo forall -c "git pull"
+                echo "Pull done"
+
+                '''
+            }
+        }
+    }
+}
