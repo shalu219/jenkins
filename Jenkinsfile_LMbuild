@@ -46,9 +46,7 @@ pipeline {
                 repo forall -c "git checkout master"
                 repo forall -c "git pull"
 
-                script{
-                    tagExist=$(git -C ./${subModule} branch -a | grep ${patchBranch} | tr -d " ")
-                }
+                tagExist=$(git -C ./${subModule} branch -a | grep ${patchBranch} | tr -d " ")
                 echo "tagExist=${tagExist}"
 
                 if [ ! -z "$tagExist" ]; then
