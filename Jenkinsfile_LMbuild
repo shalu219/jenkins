@@ -27,15 +27,13 @@ pipeline {
         stage('Initialize the variables') {
             steps{
                 sh '''#!/bin/bash
-                script{
-                    app=`echo ${buildModule} | cut -d ":" -f1`
-                    subModule=`echo ${buildModule} | cut -d ":" -f2`
-                    SOURCE_DIR="**/**/rpm/**/RPMS/*"
-                    TARGET_BUCKET="liquimatch-${env}-repo"
-                    ROLLBACK_DIR="/rpm/rollback/qa/ogguniverse"
-                    TARGET_DIR="/rpm/${TARGET_BUCKET}"
-                    CACHE_DIR="${TARGET_DIR}/dev-cache"
-                }
+                app=`echo ${buildModule} | cut -d ":" -f1`
+                subModule=`echo ${buildModule} | cut -d ":" -f2`
+                SOURCE_DIR="**/**/rpm/**/RPMS/*"
+                TARGET_BUCKET="liquimatch-${env}-repo"
+                ROLLBACK_DIR="/rpm/rollback/qa/ogguniverse"
+                TARGET_DIR="/rpm/${TARGET_BUCKET}"
+                CACHE_DIR="${TARGET_DIR}/dev-cache"
                 '''
             }                
         }
