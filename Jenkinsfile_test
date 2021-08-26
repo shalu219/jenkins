@@ -9,25 +9,25 @@ pipeline {
         stage ("Build") {
             steps {
                 echo 'Building....'
-                #build 'LM-RFQ-BUILD'
+                //build 'LM-RFQ-BUILD'
             }
         }
         stage('Deploy') {
             steps {
                 echo 'Deploying....'
-                #build 'LM-DevDeploy'
+                //build 'LM-DevDeploy'
             }
         }
         stage('Restart') {
             steps {
                 echo 'Restarting..'
-                #build 'LM-RestartAllDev'
+                //build 'LM-RestartAllDev'
             }
         }
         stage('Test') {
             steps {
                 echo 'Testing..'
-                #build job: 'Continuos Integration Bosonic', parameters: [string(name: 'spec', value: String.valueOf(test_spec))]
+                //build job: 'Continuos Integration Bosonic', parameters: [string(name: 'spec', value: String.valueOf(test_spec))]
             }
         }
     }
