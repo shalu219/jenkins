@@ -65,10 +65,10 @@ pipeline {
             steps {
                 sh '''#!/bin/bash
                 echo 'Building LM ${subModule}....'
-                sh 'mvn --version'
+                mvn --version
 
                 echo "BUILDING 'mvn clean deploy'"
-                sh 'mvn clean deploy -pl ${subModule} -DskipTests -U -s ~/.m2/settings.xml --also-make'
+                mvn clean deploy -pl ${subModule} -DskipTests -U -s ~/.m2/settings.xml --also-make
                 '''
             }
         }
