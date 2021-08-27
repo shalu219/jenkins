@@ -21,21 +21,28 @@ pipeline {
                 fi
                 echo "<<${patchBranch}>><<${buildModule}>><<${env}>>"
                 '''
+                input 'Do you want to continue the Build?'
             }
         }
 
         stage('Initialize the variables') {
-            steps{
+            steps {
                 sh '''#!/bin/bash
-                app=`echo ${buildModule} | cut -d ":" -f1`
-                subModule=`echo ${buildModule} | cut -d ":" -f2`
-                SOURCE_DIR="**/**/rpm/**/RPMS/*"
-                TARGET_BUCKET="liquimatch-${env}-repo"
-                ROLLBACK_DIR="/rpm/rollback/qa/ogguniverse"
-                TARGET_DIR="/rpm/${TARGET_BUCKET}"
-                CACHE_DIR="${TARGET_DIR}/dev-cache"
+                app1=`echo ${buildModule} | cut -d ":" -f1`
+                subModule1=`echo ${buildModule} | cut -d ":" -f2`                
                 '''
-            }                
+            }
+            script
+            {
+                app = ${app1}
+                subModule = ${subModule1}
+                SOURCE_DIR = "**/**/rpm/**/RPMS/*"
+                TARGET_BUCKET = "liquimatch-${env}-repo"
+                ROLLBACK_DIR = "/rpm/rollback/qa/ogguniverse"
+                TARGET_DIR = "/rpm/${TARGET_BUCKET}"
+                CACHE_DIR = "${TARGET_DIR}/dev-cache"
+
+            }
         }
         
         stage('Checkout branch') {
@@ -67,7 +74,7 @@ pipeline {
                 echo 'Building LM ${subModule}....'
                 mvn --version
 
-                echo "BUILDING 'mvn clean deploy'"
+                echo "BUILDING 'mvn clean deploy' for ${app}"
                 mvn clean deploy -pl ${subModule} -DskipTests -U -s ~/.m2/settings.xml --also-make
                 '''
             }
