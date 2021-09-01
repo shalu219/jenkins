@@ -1,102 +1,142 @@
+def server = "development"
+def otcxn_dir = "/Users/shalu/.m2/repository/com/otcxn"
+//def otcxn_dir = "/var/lib/jenkins/.m2/repository/com/otcxn"
+def getTagExist(def sm, def fb) {
+    println("subModule is "+ sm + ", fromBranch is " + fb)
+    //cmd1 = "git -C ./" + sm + " branch -a | grep " + fb + " | tr -d \" \""
+    //println(cmd1)
+    sh """#!/bin/bash
+    echo `git -C ./${sm} branch -a | grep ${fb} | tr -d " "` > tagExist.txt
+    """
+    script{
+        tagExist = readFile('tagExist.txt').trim()
+    }   
+    echo "tagExist=" + tagExist
+
+    sh """#!/bin/bash
+    set -e
+    if [ ! -z "$tagExist" ]; then
+        repo forall ${sm} -c "git checkout origin/${fb}"
+        echo "Status after branch checkout"
+        repo forall -c "git status"
+    else
+        echo "ERROR: Branch ${fb} does not exist in ${sm}"
+        exit 1
+    fi
+    """
+}
+
 pipeline {
     /*A declarative pipeline*/
 
     agent any
     parameters {
-        string(name: 'patchBranch', defaultValue: 'master', description: 'Hot Fix branch. (Please do not put "origin" with branch name)')
-        choice(name: 'buildModule', choices: ['', 'PS:persistenceserver', 'SDS:staticdataserver', 'FG:fixgateway', 'CE:creditengine', 'XE:crossingengine', 'FH:mktdatafeedhandler', 'TDB:tradedbwriter', 'TN:tradenotification', 'RG:rest_gateway', 'FM:fixmultiplexer'], description: '')
-        choice(name: 'env', choices: ['', 'development', 'qa', 'uat', 'prod'], description: '')
+        string(name: 'fromBranch', defaultValue: 'master', description: '(Please do not put "origin" with branch name)')
+        choice(name: 'buildModule', choices: ['all', 'XE:crossingengine', 'PS:persistenceserver', 'SDS:staticdataserver', 'FG:fixgateway', 'CE:creditengine', 'FH:mktdatafeedhandler', 'TDB:tradedbwriter', 'TN:tradenotification', 'RG:rest_gateway', 'FM:fixmultiplexer'], description: '')
+        //choice(name: 'server', choices: ['', 'development', 'qa', 'uat', 'prod'], description: '')
+    }
+
+    environment {
+        TARGET_BUCKET = "liquimatch-${server}-repo"
+        TARGET_DIR = "/rpm/${TARGET_BUCKET}"
+        //SOURCE_DIR = "**/**/rpm/**/RPMS/*"
+        //ROLLBACK_DIR = "/rpm/rollback/qa/ogguniverse"
+        //CACHE_DIR = "${TARGET_DIR}/dev-cache"
     }
 
     stages {
         stage('Verify inputs') {
             steps {
                 sh '''#!/bin/bash
-                if [ -z "${patchBranch}" ] || [ -z "${buildModule}" ] || [ -z "${env}" ]; then
+                set -e
+                if [ -z "${fromBranch}" ]; then
                     echo
                     echo "ERROR"
                     echo "Parameters can not be empty."
-                    echo "<<${patchBranch}>><<${buildModule}>><<${env}>>"
+                    echo "Branch Passed:<<${fromBranch}>>"
                     exit 1
                 fi
-                echo "<<${patchBranch}>><<${buildModule}>><<${env}>>"
                 '''
-                input 'Do you want to continue the Build?'
             }
         }
 
         stage('Initialize the variables') {
             steps {
                 sh '''#!/bin/bash
-                app1=`echo ${buildModule} | cut -d ":" -f1`
-                subModule1=`echo ${buildModule} | cut -d ":" -f2`                
+                echo ${buildModule} | cut -d ":" -f1 > app.txt
+                echo ${buildModule} | cut -d ":" -f2 > subModule.txt
                 '''
-            }
-            script
-            {
-                app = ${app1}
-                subModule = ${subModule1}
-                SOURCE_DIR = "**/**/rpm/**/RPMS/*"
-                TARGET_BUCKET = "liquimatch-${env}-repo"
-                ROLLBACK_DIR = "/rpm/rollback/qa/ogguniverse"
-                TARGET_DIR = "/rpm/${TARGET_BUCKET}"
-                CACHE_DIR = "${TARGET_DIR}/dev-cache"
-
+                script {
+                    app = readFile('app.txt').trim()
+                    subModule = readFile('subModule.txt').trim()
+                }
+                //input 'Do you want to continue the Build?'
             }
         }
         
         stage('Checkout branch') {
             steps {
-                sh '''#!/bin/bash
+                sh """#!/bin/bash
+                set -e
+                if [ -d ${otcxn_dir} ]; then 
+                    rm -rf ${otcxn_dir};
+                    echo "BT libs removed from <<${otcxn_dir}>>"
+                fi
                 repo init -u git@github.com:otcxn/otcxn-rfq-build.git -b ogg_universe -m default.xml
                 repo sync
                 repo forall -c "git checkout master"
                 repo forall -c "git pull"
+                """
+                script {
+                    if ("${buildModule}" != "all") {
+                        getTagExist("${subModule}", "${fromBranch}")
+                    }
+                }
 
-                tagExist=$(git -C ./${subModule} branch -a | grep ${patchBranch} | tr -d " ")
-                echo "tagExist=${tagExist}"
+                //input 'Do you want to continue the Build?'
+            }
+        }
 
-                if [ ! -z "$tagExist" ]; then
-                    repo forall ${subModule} -c "git checkout origin/${patchBranch}"
-                    if [ "$?" != "0" ]; then
-                      echo
-                      echo "ERROR: ${patchBranch} is not applied in the module"
-                      exit 1
-                    fi
-                fi
-                '''
+        stage('Build all Modules') {
+            when {
+                expression { buildModule == 'all' }
+            }
+            steps {
+                sh """#!/bin/bash
+                set -e
+                echo "Building all LM Modules from 'master' branch...."
+                mvn --version
+
+                echo "BUILDING 'mvn clean deploy'"
+                #mvn clean deploy -DskipTests -U -s /var/lib/jenkins/.m2/settings.xml
+                """
             }
         }
 
         stage('Build subModule') {
+            when {
+                expression { buildModule != 'all' }
+            }
             steps {
-                sh '''#!/bin/bash
-                echo 'Building LM ${subModule}....'
+                sh """#!/bin/bash
+                set -e
+                echo "Building LM ${subModule}...."
                 mvn --version
 
                 echo "BUILDING 'mvn clean deploy' for ${app}"
-                mvn clean deploy -pl ${subModule} -DskipTests -U -s ~/.m2/settings.xml --also-make
-                '''
+                #mvn clean deploy -pl ${subModule} -DskipTests -U -s ~/.m2/settings.xml --also-make
+                """
             }
         }
 
         stage('Publish') {
             steps {
-                sh '''#!/bin/bash
-                echo 'Publishing to ${env}..'
+                sh """#!/bin/bash
+                set -e
+                echo "Publishing to ${server}.."
                 
-                '''
+                """
             }
         }
-        
-        stage('Deploy') {
-            steps {
-                sh '''#!/bin/bash
-                echo 'Deploying....'
-                
-                '''
-            }
-        }
-
     }
 }
