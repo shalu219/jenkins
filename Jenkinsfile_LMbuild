@@ -1,28 +1,79 @@
-def server = "development"
+def rpm = "development"
 def otcxn_dir = "/Users/shalu/.m2/repository/com/otcxn"
 //def otcxn_dir = "/var/lib/jenkins/.m2/repository/com/otcxn"
-def getTagExist(def sm, def fb) {
-    println("subModule is "+ sm + ", fromBranch is " + fb)
-    //cmd1 = "git -C ./" + sm + " branch -a | grep " + fb + " | tr -d \" \""
-    //println(cmd1)
-    sh """#!/bin/bash
-    echo `git -C ./${sm} branch -a | grep ${fb} | tr -d " "` > tagExist.txt
-    """
+def getTagExist(def sm) {
+    println("subModule is "+ sm + ", fromBranch is " + fromBranch)
     script{
-        tagExist = readFile('tagExist.txt').trim()
+        tagExist = sh(script:"git -C ./${sm} branch -a | grep ${fromBranch} | tr -d \" \"", returnStdout:true).trim()
     }   
-    echo "tagExist=" + tagExist
 
     sh """#!/bin/bash
     set -e
+    echo "tagExist=${tagExist}"
     if [ ! -z "$tagExist" ]; then
-        repo forall ${sm} -c "git checkout origin/${fb}"
+        repo forall ${sm} -c "git checkout origin/${fromBranch}"
         echo "Status after branch checkout"
         repo forall -c "git status"
     else
-        echo "ERROR: Branch ${fb} does not exist in ${sm}"
+        echo "ERROR: Branch ${fromBranch} does not exist in ${sm}"
         exit 1
     fi
+    """
+}
+def publishPackage(def app) {
+    script {
+        if ("${buildModule}" != "all") {
+            rpmPackage = sh(script:"find $SOURCE_DIR -name \"${app}*.noarch.rpm\"", returnStdout:true).trim()
+            echo "SubModule Package : '${rpmPackage}'"
+        }
+    }
+    sh "cp -rv $SOURCE_DIR $TARGET_DIR"
+    def UPDATE = ""
+    if (fileExists("$TARGET_DIR/noarch/repodata/repomd.xml")) {
+        UPDATE = "--update"
+    }
+    echo "TEST OUTPUT:: <<${UPDATE}>><<${CACHE_DIR}>><<${SOURCE_DIR}>><<${TARGET_DIR}>>"
+    //createrepo --cachedir=$CACHE_DIR --workers 4 -v $UPDATE --deltas $TARGET_DIR/ --max-delta-rpm-size 399999999
+}
+def gitTagVersion(def app) {
+    script {
+        if ("${buildModule}" != "all") {
+                VERSION = sh(script:"ls -t ${TARGET_DIR}/noarch/${app}* | head -n1 | cut -d'/' -f7 | cut -d'-' -f3", returnStdout:true).trim()
+            } else {
+                VERSION = sh(script:"ls -t ${TARGET_DIR}/noarch | head -n1 | cut -d'-' -f3", returnStdout:true).trim()
+            }
+        sh "echo ${VERSION} >> ${PKG_DIR}/version.info"
+    }
+    /*
+    if ("${GIT_TAG}" =~ "NONE") {
+        echo "This is an SNAPSHOT build - Skip tagging"
+    } else {
+        echo "Release build - This build will be tagged"
+        cd ${WORKSPACE}/build
+        echo "$GIT_TAG:<<${$GIT_TAG}>>"
+        //git tag $GIT_TAG
+        //git push origin $GIT_TAG
+    } */
+    sh "touch $ROLLBACK_DIR/$VERSION"
+
+    echo "tag version"
+    timeStamp = sh(script:"TZ=\":America/Los_Angeles\" date +\"%Y%m%d\"", returnStdout:true).trim()
+    script {
+        if ("${buildModule}" != "all") {
+            verNum="subModule_${app}_${BUILD_NUMBER}_${timeStamp}"
+        } else {
+            verNum="OggUniverse_${BUILD_NUMBER}_${timeStamp}"
+        }
+    }
+    echo "VERSION: ${verNum} "
+    sh """#!/bin/bash
+    set -e
+    cd ${WORKSPACE}/build
+    #git tag ${verNum}
+    #git push origin ${verNum}
+
+    mkdir -p ${TARGET_DIR}/tags
+    touch ${TARGET_DIR}/tags/${verNum}
     """
 }
 
@@ -37,11 +88,16 @@ pipeline {
     }
 
     environment {
-        TARGET_BUCKET = "liquimatch-${server}-repo"
-        TARGET_DIR = "/rpm/${TARGET_BUCKET}"
-        //SOURCE_DIR = "**/**/rpm/**/RPMS/*"
-        //ROLLBACK_DIR = "/rpm/rollback/qa/ogguniverse"
-        //CACHE_DIR = "${TARGET_DIR}/dev-cache"
+        home_dir="/Users/shalu"
+        SOURCE_DIR="${WORKSPACE}/package/"
+        //SOURCE_DIR="**/**/rpm/**/RPMS/*"
+        TARGET_BUCKET="liquimatch-${rpm}-repo"
+        TARGET_DIR="${home_dir}/rpm/${TARGET_BUCKET}"
+        //TARGET_DIR = "/rpm/${TARGET_BUCKET}"
+        CACHE_DIR="${TARGET_DIR}/dev-cache"
+        PKG_DIR="${TARGET_DIR}/pkg-info"
+        ROLLBACK_DIR="${home_dir}/rpm/rollback/it/ogguniverse"
+        //ROLLBACK_DIR="/rpm/rollback/it/ogguniverse"
     }
 
     stages {
@@ -51,8 +107,7 @@ pipeline {
                 set -e
                 if [ -z "${fromBranch}" ]; then
                     echo
-                    echo "ERROR"
-                    echo "Parameters can not be empty."
+                    echo "ERROR: Parameters can not be empty."
                     echo "Branch Passed:<<${fromBranch}>>"
                     exit 1
                 fi
@@ -89,7 +144,7 @@ pipeline {
                 """
                 script {
                     if ("${buildModule}" != "all") {
-                        getTagExist("${subModule}", "${fromBranch}")
+                        getTagExist("${subModule}")
                     }
                 }
 
@@ -131,11 +186,39 @@ pipeline {
 
         stage('Publish') {
             steps {
+                echo "Publishing to ${rpm}.."
+
+                script{
+                    //def repo = ['s3cmd', 'createrepo']
+                    def repo = ['s3cmd']
+                    for (int i = 0; i < repo.size(); ++i) {
+                        echo "Testing the ${repo[i]} repo"
+                        check = sh(script:"which ${repo[i]}", returnStdout:true).trim()
+                        echo check
+                    }
+                }
+
                 sh """#!/bin/bash
                 set -e
-                echo "Publishing to ${server}.."
-                
+                if [ -z "${SOURCE_DIR}" ]; then
+                    echo "ERROR: Source directory must be specified."
+                    exit 1
+                fi
+                if [ -z "${TARGET_BUCKET}" ]; then
+                    echo "ERROR: Target bucket must be specified."
+                    exit 1
+                fi
+                if ! [ -e "${TARGET_DIR}"]; then
+                    mkdir -pv ${TARGET_DIR}
+                fi
+                if ! [ -e "${PKG_DIR}"]; then
+                    mkdir -pv ${PKG_DIR}
+                fi
                 """
+                publishPackage("${app}")
+                gitTagVersion("${app}")
+
+
             }
         }
     }
