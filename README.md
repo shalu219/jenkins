@@ -9,6 +9,29 @@ echo "cmd1=" + cmd1
 myVar = sh(script:"<shell command>", returnStdout:true).trim()
 check = sh(script:'which s3cmd', returnStdout:true).trim()		--> /usr/local/bin/s3cmd
 
+        stage('Initialize the variables') {
+            steps {
+                script {
+                    app = sh(script:"echo ${buildModule} | cut -d \":\" -f1", returnStdout:true).trim()
+                    subModule = sh(script:"echo ${buildModule} | cut -d \":\" -f2", returnStdout:true).trim()
+                }
+            }            
+        }
+OR, 
+
+        stage('Initialize the variables') {
+            steps {
+                sh '''#!/bin/bash
+                echo ${buildModule} | cut -d ":" -f1 > app.txt
+                echo ${buildModule} | cut -d ":" -f2 > subModule.txt
+                '''
+                script {
+                    app = readFile('app.txt').trim()
+                    subModule = readFile('subModule.txt').trim()
+                }
+            }            
+        }
+
 
 #FILE EXISTS:
 Using variable:

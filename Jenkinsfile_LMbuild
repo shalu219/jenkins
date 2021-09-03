@@ -117,16 +117,11 @@ pipeline {
 
         stage('Initialize the variables') {
             steps {
-                sh '''#!/bin/bash
-                echo ${buildModule} | cut -d ":" -f1 > app.txt
-                echo ${buildModule} | cut -d ":" -f2 > subModule.txt
-                '''
                 script {
-                    app = readFile('app.txt').trim()
-                    subModule = readFile('subModule.txt').trim()
+                    app = sh(script:"echo ${buildModule} | cut -d \":\" -f1", returnStdout:true).trim()
+                    subModule = sh(script:"echo ${buildModule} | cut -d \":\" -f2", returnStdout:true).trim()
                 }
-                //input 'Do you want to continue the Build?'
-            }
+            }            
         }
         
         stage('Checkout branch') {
