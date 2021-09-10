@@ -1,3 +1,7 @@
+#plugins needed
+Scriptler
+
+
 # jenkins
 Jenkins Pipeline
 
@@ -32,6 +36,17 @@ OR,
             }            
         }
 
+DECLARE "FILE LIST WITH SYSTEM OBJECT"
+    [$class: 'FileSystemListParameterDefinition', 
+    description: '', 
+    name: 'version', 
+    nodeName: 'master', 
+    path: '/Users/shalu/rpm/liquimatch-development-repo/noarch', 
+    regexExcludePattern: '', 
+    regexIncludePattern: '', 
+    selectedType: 'FILE', 
+    sortByLastModified: false, 
+    sortReverseOrder: true],
 
 #FILE EXISTS:
 Using variable:
@@ -77,3 +92,5 @@ https://stackoverflow.com/questions/61379959/jenkins-input-on-declarative-pipeli
 https://devopscube.com/declarative-pipeline-parameters/
 https://devops.stackexchange.com/questions/5203/passing-variables-between-scripts-in-a-jenkins-pipeline
 https://github.com/devopscube/declarative-pipeline-examples/blob/master/parameters/Jenkinsfile.ActiveChoiceParameters
+With Scriptler: https://plugins.jenkins.io/uno-choice/ >> Using Active Choices with Scriptler scripts
+
