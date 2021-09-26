@@ -1,0 +1,841 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<scriptApproval plugin="script-security@1.78">
+  <approvedScriptHashes>
+    <string>017d0db438428731cd600b6ebda805065433520f</string>
+    <string>01a0693d43d275640d80c3848a16694f695e06a7</string>
+    <string>04597b833258e8a644717486d0dcab81323c32dc</string>
+    <string>07defa5b07c58a1e879d7b219fe9956c488743c6</string>
+    <string>095a2ed678bfdeb147eb0b1a4594ff8141de6e49</string>
+    <string>09abf90f504f1e1217f66bf5fb4063486fec90c0</string>
+    <string>0a05485912b1fd54700912a9cb1bd40c54b080af</string>
+    <string>0fb0040847b6df8a4edfbbac93ad41fb9d4d5e18</string>
+    <string>114992affee45ebf316ab1f3f2db9cab66a31e16</string>
+    <string>12f3e59db2df4659c07e53897dab6aa74a016ce1</string>
+    <string>13863ffc6f3f0890d88a6f4e4a4b796439998550</string>
+    <string>1526a98a1d2b408ba99db52219f4415d1671ac4a</string>
+    <string>1700926b43ef131e095cf69e9aa5cad749123d3a</string>
+    <string>185d5705f709c4d9c6cfa44d9640f5c3021bd21c</string>
+    <string>195a17043d65890dfd6ae1ec04c4c5b73d71778d</string>
+    <string>1b44d45f321e3702740772760e206ee2cd6c2af9</string>
+    <string>1c620daf4ef9d73b54ebb82c2b2d9051ecf1cfa2</string>
+    <string>1e2a1c150f4f07837aa4a8cd560c2d224e5ab829</string>
+    <string>1eeac196c6de26bd3224b8751d89de5796db81d4</string>
+    <string>20a1b9dce29bd83188b9fe35c8a118e3edc99e55</string>
+    <string>20eb52a75a242f41bb0942917476b4cea9ab3714</string>
+    <string>224accc4f9979242fd0009ceaf084237f31120ae</string>
+    <string>24f3954c87c4ab5d257dcd48b6688e7ecf134128</string>
+    <string>2705f65ad355107f5ed081d569ab8ad3f768140b</string>
+    <string>2ab84b81eba92a2a8d7b416305ea58ea2c00cbb8</string>
+    <string>2bf2a1ffd99a4cd5b2273cc3097b845a51118d7d</string>
+    <string>2ce22ac3353e6eda0e6b8fb0eefc86e6f255455e</string>
+    <string>2d76e678f080c00b23aee0b71b311a34a336751d</string>
+    <string>2e938792d767b652c2e60066bdfb40d673897efd</string>
+    <string>2f356d798ed91ae9dc3a51245b7e9fcb7bbfb729</string>
+    <string>32f0c973265231e017ebe0925a7b4e5f341d02b5</string>
+    <string>350ba5dcd7df59944f0f2dd2a8a73f1913f3b6b5</string>
+    <string>3762503aadfa816d3ad00c4a3b5962e3fa36e419</string>
+    <string>3782ed5825ed0efddcb51e8c408d1a7beecbeec8</string>
+    <string>39fe6e7c655df33bd5d232b90142cbfab78029e9</string>
+    <string>3ada69f3221ee443efe1129e35aa9dd7d1a3049d</string>
+    <string>3b31aaa720b2b68c36c90230bf6b0c74598e5f26</string>
+    <string>3faa63decbc253c56f645f70392fe101eefbabd8</string>
+    <string>40515994d6113964edef0ef47c3309d376ecc7d9</string>
+    <string>4358983b4e6bd49a67d92a28043215b4ddf62393</string>
+    <string>43ac00a413732bddb9823c74b3b25b000b084905</string>
+    <string>4401e3063fc052bfa5804e8de9b4881e7b37e7e6</string>
+    <string>457782ca70051e68c499838617f927126087f30c</string>
+    <string>46c261b2d76bae02c3ae3f6e13ebd28dfa384dfd</string>
+    <string>493bf4f0e11c3d4f5e42caf24c712afeb3280a52</string>
+    <string>4a64822475032adcb4b9cf9405b4dec64a9c4cb7</string>
+    <string>4c2bb45deee692305b2dad4c0e3a45d460ce6246</string>
+    <string>4c8960d7c9ca455474bc0d456fc59bdd4e6b2aa3</string>
+    <string>4c8e7782f10f7d2750236ccb1a0644ba0ce49137</string>
+    <string>4dd10987ce82f589a4c37edc599459a035e29b6d</string>
+    <string>4dffd283f8c7f4027f81c9901c4434efd98622ee</string>
+    <string>500979d266b7fb15d68e281bb00d1266d8221394</string>
+    <string>5044f56a71c4b9e7a547a9049ca087facbd6ac0a</string>
+    <string>5500fded12f1865b48ec671b8b5d75633d81e52f</string>
+    <string>55037b4da221792504fc2a8600b42ab27493594b</string>
+    <string>5716006a86a3c9a8d6001c215af5eefffa79c325</string>
+    <string>5a1e4411ff90ac21f597bd412f45742697341dc4</string>
+    <string>5c5f67d531cb3f0cfef371e7d8a103a824044634</string>
+    <string>613bb9e2ae60521d7303e4255a57013bf88b6ba9</string>
+    <string>63007c6092ae4e487db4588c1cc931a17b698356</string>
+    <string>644f034aca1ade6439bc6405e3daf44423e14c1e</string>
+    <string>661a296c420024384dceb6d47bafd9253dc4a9f3</string>
+    <string>661c9d585ef1936280b7b55b17f94cc24c0c7265</string>
+    <string>6999815c273c0a264b2f145a3d4cb59a7a388a24</string>
+    <string>6ab2d265cc1779837cb86c45fdeecf70b0ec5638</string>
+    <string>6b0c95ad705a4f5f04f28187f7c7704d1fc7d41f</string>
+    <string>6ea79a3a8ba5c6b8e4494837729698a6732341a4</string>
+    <string>71a24035972abf953da68c465299a4da40ebbc61</string>
+    <string>7361aaa008230442202bb1157279f8834f5cb89c</string>
+    <string>74478e5e69350ecb5c52f98e584fe3ea813cc522</string>
+    <string>759893e20ed06948d9e074aa939b7c093cf89892</string>
+    <string>7a98c09eccc7a6b762be1f9152a74328a045b84a</string>
+    <string>7b46ec46567e57fad81f20cf99bee0259bf8bc41</string>
+    <string>7bfe030f7f87403b03aa1d68a9a1e8f6027e5684</string>
+    <string>7eb7b7b1bae2c371fd46b86b5584c62949c41c27</string>
+    <string>804ec8ea04d47115dcb0f79de82c6e6e94eafdad</string>
+    <string>81ba63a5c49379088a9aadf40232099deb84917f</string>
+    <string>83caa0fbb0811af3bbecf4d9e45e3ead5b909a66</string>
+    <string>8426186910cad004e7256501d4bf8ff6d99a860e</string>
+    <string>846e3cdab0f9bc2ed5c7394a197e328b6043b436</string>
+    <string>8780733c827297faf7bed905a63faecf0b05686d</string>
+    <string>8815f55f5d9fa5ada699901070693d5016a7f225</string>
+    <string>8af70d068aa73a929c3546b51716280d6691088a</string>
+    <string>8fea40dfb2c8b98c7c254f30f409408053dd914a</string>
+    <string>92a65c10895033f450b3c2bf714f334e375b2b6c</string>
+    <string>94b12990e509ce2b7700545d268cd2fc2700815e</string>
+    <string>95898a9ecb82e8fa2319b0aa4766fab53ae41315</string>
+    <string>961fc11cd7930c6b5df0d7e4f166545ea6f1fdce</string>
+    <string>9783e089a7d797231567c7a3e13b8f52ae8f07c0</string>
+    <string>97f3038d2eb1add45ac06a82091c6a6661b4d450</string>
+    <string>9b832a6fd5dd75684541146c36b91cb591441b53</string>
+    <string>9bbeb5bd35cedf4dc113a56cff5520741c9d781f</string>
+    <string>9d6758cded5eb6e991cd7f2742ec63bae3ae7ba3</string>
+    <string>9f4d998223cc520778ccbb3b3ec827e41fa5dfd3</string>
+    <string>9fe65e9e9e1dcabd50f03580dfeb12e0fb7e147e</string>
+    <string>a243759d28b9bb595929e7f68a3a81b250458bb8</string>
+    <string>a312e1a9b947feb904bef93d1aba0d71aa22fc14</string>
+    <string>a33630e5caa41956dddb4d9d0fdda6d65cc919c2</string>
+    <string>a342d5d06f36b9ba5faf4c347b8ad470046e5d71</string>
+    <string>a377f32cbd3e06a2a34fc40dcfcf4df23203a14a</string>
+    <string>a63f4dd36f82258dfdc7c9e0868cd82859fcc4e0</string>
+    <string>a88978aabd63576d0da2720c98cbdd97f9d1ad86</string>
+    <string>a890587214ddb175e15e538aecd5f13a112243a9</string>
+    <string>aaccf2f8fd1a3a2134297b27d6c1f395849a5409</string>
+    <string>ae42400508502c1efa460e3e295b20e31162b84a</string>
+    <string>afbb90cef85437659564c4781b446930f6ed59bb</string>
+    <string>b00b29fc8a15e5cee5be8ce9af6f458d0b46517d</string>
+    <string>b128240b512f677fcd81bbe86ad07fd7991b4c16</string>
+    <string>b2da1728e33446b455a9932a48a3ea30d2623048</string>
+    <string>b43e079934097cef8e3e2902bd62404742f2f8e8</string>
+    <string>b7e0d3360092f8ed4e0b99e7c14e8d649f764d19</string>
+    <string>c035201b6130f2f8e086db058d08db2363cdcb68</string>
+    <string>c0444df2f54b7a6cdf91c61bf727e5e4813c16d3</string>
+    <string>c210c7d55e559e77c2fc69e63dd852643a3e6a3d</string>
+    <string>c44113a9d3acb441e94166dc5a395e39d8328efd</string>
+    <string>c532a20b3df9cfd5a029145ff88860e31683f9f9</string>
+    <string>c5b2df19d609cf0b3c17646db5013e8be4cfdb13</string>
+    <string>c98ff14ea0bd7285a391b491dd8fed79c57a9dfc</string>
+    <string>cb06248bff595a0eb2a8b701556cfe95013a519d</string>
+    <string>cb9efa23f61432e346a716395f9db9d1dd56022f</string>
+    <string>cd8f4408b6b443ed00d139ca2c228a7aad0c8506</string>
+    <string>cdea4d48ae333e408063e16e1966f17b2ff5a641</string>
+    <string>ce2357925c5667805a3dff3e83828bcbab163971</string>
+    <string>cfa9157130cfcd3ea568c06d379ec0cc4ca3a600</string>
+    <string>cfd2479eccd510ab530b120c311d1ba23ea43514</string>
+    <string>d0656dd12bdfe22c3d27afbd5f0c2062a3fe5cc7</string>
+    <string>d09d19407925ed6cd9ca29b1ac2b815095105187</string>
+    <string>d162573302cca8748750ee70c9e63edd77d65d08</string>
+    <string>d25d13f7f093b36c4db23dc1527de278439c18a6</string>
+    <string>d2c2165ddfc13d9d84f02c327da4e72ec4d56623</string>
+    <string>d40651eabc9d878080a72606d46be01a7e6b4bff</string>
+    <string>d6bbf50ee3d1f6543cad3bff4fd4eaf7100b1fb6</string>
+    <string>d73395caf586e806d6ca4992a0ac4ab03f005ae9</string>
+    <string>d92b4fc6f98a0ba2c1a2b5a2bd2dab84260f9b98</string>
+    <string>da4ded9af219ce6f3c4f837af7cb36dc8709c0c6</string>
+    <string>da7d47d9c3cd947c7e1f9f29a46d04f9b4232853</string>
+    <string>db7fe56d8d8203c86d44f2b7e871589eab5999c2</string>
+    <string>db841ea4510bf8bdf8fb12db1a2d71b695aaf881</string>
+    <string>e22b0c6c6ecca80284a13470b10c76bb751abe43</string>
+    <string>e6a1784c2ff6d71f92b21754bbcb34ed05570e5f</string>
+    <string>e76047dbf67a7e40be87397a0ad7202d9154d4f2</string>
+    <string>ea1c53ffa534437a2a01663637dd490318b91c32</string>
+    <string>ea85e96fae0509cfbacf091da3e7e3c5c16b173f</string>
+    <string>eadcda3d22f113108f76395bd62c6833eded252e</string>
+    <string>ebaa2407d9f2d9bf28a4191ea036c227592ca237</string>
+    <string>ec002839364bcba6a1504a0aefb11b1b75b12d55</string>
+    <string>edc8b01ae2f59b5d6bb677e25d771a1c3c2f31d3</string>
+    <string>f2a65fe0f7980431ddd6dc27ed10f5b2d42339fd</string>
+    <string>f46e94c8b2f4c537b0a852f2b9ffd73945c53534</string>
+    <string>f4e13040c5d648d2a7d96d997c6d4d3c9873fe4b</string>
+    <string>f5c60788ed4fd4892c713888767f73d8e104091c</string>
+    <string>f94cbfcfebe31ea9b054bb028e3387bfefd919de</string>
+    <string>f9fac67295bd86e829d19330b1187c694ce021b2</string>
+    <string>fa44e2ea675286c3660cbeb9ada40ecd5b00b6d0</string>
+    <string>fc99c32d097d46625db2419b32e93436b21fb0d0</string>
+    <string>fce6fc7f3aaef32e54f328155ee766cdd65f5376</string>
+    <string>fd345f8f20459e2d5a2f996b4807690c03581cca</string>
+    <string>fd7dd0d8d1c0aee96ed23f876b6c6cfd78860858</string>
+    <string>fdaf83f5e482aad4eec51ddfbcfbd6da6957f228</string>
+    <string>fdaf84960b91fa6cf06dde8bc36547ea4dc0b58c</string>
+    <string>fe1a22c2397355c8a63193f0881a30558c252ef8</string>
+    <string>ff260aa0cb2fbeeffb466e31b6435ac1b830bf49</string>
+  </approvedScriptHashes>
+  <approvedSignatures/>
+  <aclApprovedSignatures/>
+  <approvedClasspathEntries/>
+  <pendingScripts>
+    <pendingScript>
+      <context/>
+      <script>return[&apos;all&apos;, &apos;XE:crossingengine&apos;, &apos;PS:persistenceserver&apos;, &apos;SDS:staticdataserver&apos;, &apos;FG:fixgateway&apos;, &apos;CE:creditengine&apos;, &apos;FH:mktdatafeedhandler&apos;, &apos;TDB:tradedbwriter&apos;, &apos;TN:tradenotification&apos;, &apos;RG:rest_gateway&apos;, &apos;FM:fixmultiplexer&apos;]</script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>return[&apos;all&apos;,&apos;XE:crossingengine&apos;,&apos;PS:persistenceserver&apos;,&apos;SDS:staticdataserver&apos;,&apos;FG:fixgateway&apos;,&apos;CE:creditengine&apos;,&apos;FH:mktdatafeedhandler&apos;,&apos;TDB:tradedbwriter&apos;,&apos;TN:tradenotification&apos;,&apos;RG:rest_gateway&apos;,&apos;FM:fixmultiplexer&apos;]</script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>return[&apos;all&apos;]</script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>return[&quot;Dev&quot;,&quot;QA&quot;,&quot;Stage&quot;,&quot;Prod&quot;]</script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>return[&apos;Could not get Env&apos;]</script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script> if (Env.equals(&quot;Dev&quot;)){
+                                return[&quot;devaaa001&quot;,&quot;devaaa002&quot;,&quot;devbbb001&quot;,&quot;devbbb002&quot;,&quot;devccc001&quot;,&quot;devccc002&quot;]
+                            }
+                            else if(Env.equals(&quot;QA&quot;)){
+                                return[&quot;qaaaa001&quot;,&quot;qabbb002&quot;,&quot;qaccc003&quot;]
+                            }
+                            else if(Env.equals(&quot;Stage&quot;)){
+                                return[&quot;staaa001&quot;,&quot;stbbb002&quot;,&quot;stccc003&quot;]
+                            }
+                            else if(Env.equals(&quot;Prod&quot;)){
+                                return[&quot;praaa001&quot;,&quot;prbbb002&quot;,&quot;prccc003&quot;]
+                            }
+                        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>return[&apos;Could not get Environment from Env Param&apos;]</script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>return [&quot;Select:selected&quot;, &quot;DEV&quot;, &quot;TEST&quot;, &quot;STAGE&quot;, &quot;PROD&quot;]</script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>return [&quot;IT&quot;, &quot;UAT&quot;, &quot;PROD&quot;]</script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+        xx = [&quot;/Users/shalu/rpm/liquimatch-class hudson.model.Environment-repo/noarch&quot;]
+        return xx
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>return [&quot;IT&quot;,&quot;UAT&quot;,&quot;PROD&quot;]</script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+        xx = [&quot;/Users/shalu/rpm/liquimatch-IT-repo/noarch&quot;]
+        return xx
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+        xx = [&quot;/Users/shalu/rpm/liquimatch-PROD-repo/noarch&quot;]
+        return xx
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+        xx = [&quot;/Users/shalu/rpm/liquimatch-Environment-repo/noarch&quot;]
+        return xx
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+        xx = [&quot;/Users/shalu/rpm/liquimatch-${Environment}-repo/noarch&quot;]
+        return xx
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+        xx = [&quot;/Users/shalu/rpm/liquimatch-UAT-repo/noarch&quot;]
+        return xx
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+        #xx = [&quot;/Users/shalu/rpm/liquimatch-UAT-repo/noarch&quot;]
+        #return xx
+        List itList  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;]
+        List uatList  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;]
+        List prodList  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/noarch&quot;]
+
+        List default_item = [&quot;None&quot;]
+
+        if (Environment == &apos;IT&apos;) {
+          return itList
+        } else if (Environment == &apos;UAT&apos;) {
+          return uatList
+        } else if (Environment == &apos;PROD&apos;) {
+          return prodList
+        } else {
+          return default_item
+        }
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+        //xx = [&quot;/Users/shalu/rpm/liquimatch-IT-repo/noarch&quot;]
+        //return xx
+        List itList  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;]
+        List uatList  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;]
+        List prodList  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/noarch&quot;]
+
+        List default_item = [&quot;None&quot;]
+
+        if (Environment == &apos;IT&apos;) {
+          return itList
+        } else if (Environment == &apos;UAT&apos;) {
+          return uatList
+        } else if (Environment == &apos;PROD&apos;) {
+          return prodList
+        } else {
+          return default_item
+        }
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+        def list = []
+        def dir = new File(&quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;)
+        dir.eachFileRecurse (FileType.FILES) { file -&gt;
+          list &lt;&lt; file
+        }
+        return list
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+        //xx = [&quot;/Users/shalu/rpm/liquimatch-PROD-repo/noarch&quot;]
+        //return xx
+        List itList  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;]
+        List uatList  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;]
+        List prodList  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/noarch&quot;]
+
+        List default_item = [&quot;None&quot;]
+
+        if (Environment == &apos;IT&apos;) {
+          return itList
+        } else if (Environment == &apos;UAT&apos;) {
+          return uatList
+        } else if (Environment == &apos;PROD&apos;) {
+          return prodList
+        } else {
+          return default_item
+        }
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+        import static groovy.io.FileType.FILES
+        def dir = new File(&quot;/Users/shalu/rpm/liquimatch-uat-repo/noarch&quot;);
+        def files = [];
+        dir.traverse(type: FILES, maxDepth: 0) { files.add(it) };
+        return files
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+        import static groovy.io.FileType.FILES
+        def dir = new File(&quot;error&quot;);
+        def files = [];
+        dir.traverse(type: FILES, maxDepth: 0) { files.add(it) };
+        return files
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+        import static groovy.io.FileType.FILES
+        def dir = new File(&quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;);
+        def files = [];
+        dir.traverse(type: FILES, maxDepth: 0) { files.add(it) };
+        return files
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+//xx = [&quot;/Users/shalu/rpm/liquimatch-PROD-repo/noarch&quot;]
+//return xx
+List itList  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;]
+List uatList  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;]
+List prodList  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/noarch&quot;]
+
+List default_item = [&quot;None&quot;]
+
+if (Environment == &apos;IT&apos;) {
+  return itList
+} else if (Environment == &apos;UAT&apos;) {
+  return uatList
+} else if (Environment == &apos;PROD&apos;) {
+  return prodList
+} else {
+  return default_item
+}
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+import static groovy.io.FileType.FILES
+def dir = new File(&quot;/Users/shalu/rpm/liquimatch-uat-repo/noarch&quot;);
+def files = [];
+dir.traverse(type: FILES, maxDepth: 0) { files.add(it) };
+return files
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+import static groovy.io.FileType.FILES
+def dir = new File(&quot;error&quot;);
+def files = [];
+dir.traverse(type: FILES, maxDepth: 0) { files.add(it) };
+return files
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+return [
+&quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;,
+&quot;/Users/shalu/rpm/liquimatch-uat-repo/noarch&quot;,
+&quot;/Users/shalu/rpm/liquimatch-prod-repo/noarch&quot;
+]
+		</script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+import static groovy.io.FileType.FILES
+//def dir = [path]
+//return dir;
+
+def dir = new File(&quot;${HostPath}&quot;);
+def files = [];
+dir.traverse(type: FILES, maxDepth: 0) { files.add(it) };
+return files;</script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>import static groovy.io.FileType.FILES
+def dir = [HostPath]
+return dir;
+
+	</script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+return [
+&quot;IT_DEPLOY&quot;,
+&quot;UAT_DEPLOY&quot;,
+&quot;PROD_DEPLOY&quot;,
+&quot;UAT_PROMOTE&quot;,
+&quot;PROD_PROMOTE&quot;
+]
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>import static groovy.io.FileType.FILES
+List itDeploy  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/tags&quot;]
+List uatDeploy  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/tags&quot;]
+List prodDeploy  = [&quot;/Users/shalu/rpm/liquimatch-prod-repo/tags&quot;]
+List uatPromote  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/tags&quot;]
+List prodPromote  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/tags&quot;]
+
+List default_item = [&quot;None&quot;]
+
+if (Environment == &apos;IT_DEPLOY&apos;) {
+  return itDeploy
+} else if (Environment == &apos;UAT_DEPLOY&apos;) {
+  return uatDeploy
+} else if (Environment == &apos;PROD_DEPLOY&apos;) {
+  return prodDeploy
+} else if (Environment == &apos;UAT_PROMOTE&apos;) {
+  return uatPromote
+} else if (Environment == &apos;PROD_PROMOTE&apos;) {
+  return prodPromote
+} else {
+  return default_item
+}
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>import static groovy.io.FileType.FILES
+List itDeploy  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/tags&quot;]
+List uatDeploy  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/tags&quot;]
+List prodDeploy  = [&quot;/Users/shalu/rpm/liquimatch-prod-repo/tags&quot;]
+List uatPromote  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/tags&quot;]
+List prodPromote  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/tags&quot;]
+
+List default_item = [&quot;None&quot;]
+
+if (Environment == &quot;IT_DEPLOY&quot;) {
+  return itDeploy
+} else if (Environment == &apos;UAT_DEPLOY&apos;) {
+  return uatDeploy
+} else if (Environment == &apos;PROD_DEPLOY&apos;) {
+  return prodDeploy
+} else if (Environment == &apos;UAT_PROMOTE&apos;) {
+  return uatPromote
+} else if (Environment == &apos;PROD_PROMOTE&apos;) {
+  return prodPromote
+} else {
+  return default_item
+}
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>import static groovy.io.FileType.FILES
+def itDeploy  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/tags&quot;]
+def uatDeploy  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/tags&quot;]
+def prodDeploy  = [&quot;/Users/shalu/rpm/liquimatch-prod-repo/tags&quot;]
+def uatPromote  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/tags&quot;]
+def prodPromote  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/tags&quot;]
+
+List default_item = [&quot;None&quot;]
+
+if (Environment == &apos;IT_DEPLOY&apos;) {
+  return itDeploy
+} else if (Environment == &apos;UAT_DEPLOY&apos;) {
+  return uatDeploy
+} else if (Environment == &apos;PROD_DEPLOY&apos;) {
+  return prodDeploy
+} else if (Environment == &apos;UAT_PROMOTE&apos;) {
+  return uatPromote
+} else if (Environment == &apos;PROD_PROMOTE&apos;) {
+  return prodPromote
+} else {
+  return default_item
+}
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>import static groovy.io.FileType.FILES
+List itDeploy  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/tags&quot;, &quot;itDeploy&quot;]
+List uatDeploy  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/tags&quot;]
+List prodDeploy  = [&quot;/Users/shalu/rpm/liquimatch-prod-repo/tags&quot;]
+List uatPromote  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/tags&quot;, &quot;uatPromote&quot;]
+List prodPromote  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/tags&quot;]
+
+List default_item = [&quot;None&quot;]
+
+if (EnvironmentAction == &apos;IT_DEPLOY&apos;) {
+  return itDeploy
+} else if (EnvironmentAction == &apos;UAT_DEPLOY&apos;) {
+  return uatDeploy
+} else if (EnvironmentAction == &apos;PROD_DEPLOY&apos;) {
+  return prodDeploy
+} else if (EnvironmentAction == &apos;UAT_PROMOTE&apos;) {
+  return uatPromote
+} else if (EnvironmentAction == &apos;PROD_PROMOTE&apos;) {
+  return prodPromote
+} else {
+  return default_item
+}
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>import static groovy.io.FileType.FILES
+List itDeploy  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/tags&quot;]
+List uatDeploy  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/tags&quot;]
+List prodDeploy  = [&quot;/Users/shalu/rpm/liquimatch-prod-repo/tags&quot;]
+List uatPromote  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/tags&quot;]
+List prodPromote  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/tags&quot;]
+
+List default_item = [&quot;None&quot;]
+
+if (EnvironmentAction == &apos;IT_DEPLOY&apos;) {
+  return itDeploy
+} else if (EnvironmentAction == &apos;UAT_DEPLOY&apos;) {
+  return uatDeploy
+} else if (EnvironmentAction == &apos;PROD_DEPLOY&apos;) {
+  return prodDeploy
+} else if (EnvironmentAction == &apos;UAT_PROMOTE&apos;) {
+  return uatPromote
+} else if (EnvironmentAction == &apos;PROD_PROMOTE&apos;) {
+  return prodPromote
+} else {
+  return default_item
+}
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+List itDeploy  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/tags&quot;]
+List uatDeploy  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/tags&quot;]
+List prodDeploy  = [&quot;/Users/shalu/rpm/liquimatch-prod-repo/tags&quot;]
+List uatPromote  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/tags&quot;]
+List prodPromote  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/tags&quot;]
+
+List default_item = [&quot;None&quot;]
+
+if (EnvironmentAction == &apos;IT_DEPLOY&apos;) {
+  return itDeploy
+} else if (EnvironmentAction == &apos;UAT_DEPLOY&apos;) {
+  return uatDeploy
+} else if (EnvironmentAction == &apos;PROD_DEPLOY&apos;) {
+  return prodDeploy
+} else if (EnvironmentAction == &apos;UAT_PROMOTE&apos;) {
+  return uatPromote
+} else if (EnvironmentAction == &apos;PROD_PROMOTE&apos;) {
+  return prodPromote
+} else {
+  return default_item
+}
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+List itDeploy  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/tags&quot;]
+List uatDeploy  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/tags&quot;]
+List prodDeploy  = [&quot;/Users/shalu/rpm/liquimatch-prod-repo/tags&quot;]
+List uatPromote  = [&quot;/Users/shalu/rpm/liquimatch-it-repo/tags&quot;]
+List prodPromote  = [&quot;/Users/shalu/rpm/liquimatch-uat-repo/tags&quot;]
+
+List default_item = [&quot;None&quot;]
+
+if (EnvironmentAction.equals(&quot;IT_DEPLOY&quot;)){
+  return itDeploy
+} else if (EnvironmentAction.equals(&quot;UAT_DEPLOY&quot;)){
+  return uatDeploy
+} else if (EnvironmentAction.equals(&quot;PROD_DEPLOY&quot;)){
+  return prodDeploy
+} else if (EnvironmentAction.equals(&quot;UAT_PROMOTE&quot;)){
+  return uatPromote
+} else if (EnvironmentAction.equals(&quot;PROD_PROMOTE&quot;)){
+  return prodPromote
+} else {
+  return default_item
+}
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>//return [&quot;Select:selected&quot;, &quot;DEV&quot;, &quot;TEST&quot;, &quot;STAGE&quot;, &quot;PROD&quot;]
+return [&quot;it&quot;, &quot;uat&quot;, &quot;prod&quot;]
+</script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>// Static content examples. These lists can be generated dynamically as an alternative.&#xd;
+// return [&quot;Select:selected&quot;, &quot;DEV&quot;, &quot;TEST&quot;, &quot;STAGE&quot;, &quot;PROD&quot;]&#xd;
+/*&#xd;
+List devList  = [&quot;Select:selected&quot;, &quot;dev1&quot;, &quot;dev2&quot;]&#xd;
+List testList  = [&quot;Select:selected&quot;, &quot;test1&quot;, &quot;test2&quot;, &quot;test3&quot;]&#xd;
+List stageList = [&quot;Select:selected&quot;, &quot;stage1&quot;]&#xd;
+List prodList  = [&quot;Select:selected&quot;, &quot;prod1&quot;, &quot;prod2&quot;, &quot;prod3&quot;, &quot;prod4&quot;]&#xd;
+*/&#xd;
+&#xd;
+xx = [&quot;/Users/shalu/rpm/liquimatch-${Environment}-repo/noarch&quot;]&#xd;
+&#xd;
+//List default_item = [&quot;None&quot;]&#xd;
+&#xd;
+/*&#xd;
+if (Environment == &apos;it&apos;) {&#xd;
+  return xx&#xd;
+  //return devList&#xd;
+} else if (Environment == &apos;uat&apos;) {&#xd;
+  return testList&#xd;
+} else if (Environment == &apos;prod&apos;) {&#xd;
+  return prodList&#xd;
+} else {&#xd;
+  return default_item&#xd;
+}&#xd;
+*/&#xd;
+return xx&#xd;
+</script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>import static groovy.io.FileType.FILES
+def itDeploy  = &quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;
+def uatDeploy  = &quot;/Users/shalu/rpm/liquimatch-uat-repo/noarch&quot;
+def prodDeploy  = &quot;/Users/shalu/rpm/liquimatch-prod-repo/noarch&quot;
+def uatPromote  = &quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;
+def prodPromote  = &quot;/Users/shalu/rpm/liquimatch-uat-repo/noarch&quot;
+def rootPath = &quot;&quot;
+
+List default_item = [&quot;None&quot;]
+
+if (EnvironmentAction.equals(&quot;IT_DEPLOY&quot;)){
+  rootPath = itDeploy
+} else if (EnvironmentAction.equals(&quot;UAT_DEPLOY&quot;)){
+  rootPath = uatDeploy
+} else if (EnvironmentAction.equals(&quot;PROD_DEPLOY&quot;)){
+  rootPath = prodDeploy
+} else if (EnvironmentAction.equals(&quot;UAT_PROMOTE&quot;)){
+  rootPath = uatPromote
+} else if (EnvironmentAction.equals(&quot;PROD_PROMOTE&quot;)){
+  rootPath = prodPromote
+} else {
+  return default_item
+}
+
+def dir = new File(rootPath);
+def files = [];
+dir.eachFileRecurse(FILES) {
+  if(it.name.endsWith(&apos;.rpm&apos;)) {
+    files &lt;&lt; it.getName()
+  }
+}
+return files.reverse();
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+import static groovy.io.FileType.FILES
+def itDeploy  = &quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;
+def uatDeploy  = &quot;/Users/shalu/rpm/liquimatch-uat-repo/noarch&quot;
+def prodDeploy  = &quot;/Users/shalu/rpm/liquimatch-prod-repo/noarch&quot;
+def uatPromote  = &quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;
+def prodPromote  = &quot;/Users/shalu/rpm/liquimatch-uat-repo/noarch&quot;
+def rootPath = &quot;&quot;
+
+List default_item = [&quot;None&quot;]
+
+if (EnvironmentAction.equals(&quot;IT_DEPLOY&quot;)){
+  rootPath = itDeploy
+} else if (EnvironmentAction.equals(&quot;UAT_DEPLOY&quot;)){
+  rootPath = uatDeploy
+} else if (EnvironmentAction.equals(&quot;PROD_DEPLOY&quot;)){
+  rootPath = prodDeploy
+} else if (EnvironmentAction.equals(&quot;UAT_PROMOTE&quot;)){
+  rootPath = uatPromote
+} else if (EnvironmentAction.equals(&quot;PROD_PROMOTE&quot;)){
+  rootPath = prodPromote
+} else {
+  return default_item
+}
+
+def dir = new File(rootPath);
+def files = [];
+dir.eachFileRecurse(FILES) {
+  if(it.name.endsWith(&apos;.noarch.rpm&apos;)) {
+    files &lt;&lt; it.getName()
+  }
+}
+return files.reverse();
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>
+import static groovy.io.FileType.FILES
+def itDeploy  = &quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;
+def uatDeploy  = &quot;/Users/shalu/rpm/liquimatch-uat-repo/noarch&quot;
+def prodDeploy  = &quot;/Users/shalu/rpm/liquimatch-prod-repo/noarch&quot;
+def uatPromote  = &quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;
+def prodPromote  = &quot;/Users/shalu/rpm/liquimatch-uat-repo/noarch&quot;
+def rootPath = &quot;&quot;
+
+List default_item = [&quot;None&quot;]
+
+if (EnvironmentAction.equals(&quot;IT_DEPLOY&quot;)){
+  rootPath = itDeploy
+} else if (EnvironmentAction.equals(&quot;UAT_DEPLOY&quot;)){
+  rootPath = uatDeploy
+} else if (EnvironmentAction.equals(&quot;PROD_DEPLOY&quot;)){
+  rootPath = prodDeploy
+} else if (EnvironmentAction.equals(&quot;UAT_PROMOTE&quot;)){
+  rootPath = uatPromote
+} else if (EnvironmentAction.equals(&quot;PROD_PROMOTE&quot;)){
+  rootPath = prodPromote
+} else {
+  return default_item
+}
+
+def dir = new File(rootPath);
+def files = [];
+dir.eachFileRecurse(FILES) {
+  if(it.name.endsWith(&apos;.noarch.rpm&apos;)) {
+    files &lt;&lt; it.getName()
+  }
+}
+//return files.reverse();
+return files
+        </script>
+      <language>groovy</language>
+    </pendingScript>
+    <pendingScript>
+      <context/>
+      <script>return [&apos;no&apos;,&apos;yes&apos;]</script>
+      <language>groovy</language>
+    </pendingScript>
+  </pendingScripts>
+  <pendingSignatures>
+    <pendingSignature>
+      <context/>
+      <signature>new java.io.File java.lang.String</signature>
+      <dangerous>true</dangerous>
+    </pendingSignature>
+  </pendingSignatures>
+  <pendingClasspathEntries/>
+</scriptApproval>

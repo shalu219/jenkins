@@ -1,0 +1,257 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.plugins.buildblocker.BuildBlockerProperty plugin="build-blocker-plugin@1.7.3">
+      <useBuildBlocker>false</useBuildBlocker>
+      <blockLevel>GLOBAL</blockLevel>
+      <scanQueueFor>DISABLED</scanQueueFor>
+      <blockingJobs></blockingJobs>
+    </hudson.plugins.buildblocker.BuildBlockerProperty>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>5</daysToKeep>
+        <numToKeep>20</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>-1</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@3.12.1">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>git@github.com:otcxn/front_end.git</url>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>*/master</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+echo &quot;========== NPM INSTALL ===================&quot;
+npm install
+echo
+echo &quot;npm install completed&quot;
+echo 
+echo &quot;========== Building Packages ==============&quot;
+echo
+
+for package in $(npm run | grep build-); do
+   echo &quot;Building package $package&quot;
+   revNum=$(git rev-parse --short HEAD) npm run $package
+   echo &quot;Building package $package completed&quot;
+   echo
+done
+
+verNum=&quot;FE_${BUILD_NUMBER}_DO&quot;
+
+git tag $verNum
+git push origin $verNum
+
+revNum=$(git rev-parse --short HEAD) 
+echo &quot;branch: master&quot; &gt;&gt; build.txt
+echo &quot;commit: $revNum&quot; &gt;&gt; build.txt
+echo &quot;tags: $verNum&quot; &gt;&gt; build.txt
+
+cp build.txt custodian-ui/build/
+cp build.txt trader-ui/build/
+cp build.txt central-ui/build/
+
+rm -rf frontend-* *frontend*.zip
+
+mkdir -p frontend-cust/custodian_ui
+mkdir -p frontend-trader/trader_ui
+mkdir -p frontend-central/central_ui
+
+cp -r custodian-ui/build/* frontend-cust/custodian_ui
+cp -r trader-ui/build/* frontend-trader/trader_ui
+cp -r central-ui/build/* frontend-central/central_ui
+
+mkdir -p frontend-cust/runtime/localhost
+mkdir -p frontend-trader/runtime/localhost
+mkdir -p frontend-central/runtime/localhost
+
+touch frontend-cust/runtime/localhost/runtime.js
+touch frontend-trader/runtime/localhost/runtime.js
+touch frontend-central/runtime/localhost/runtime.js
+
+#timeStamp=$(TZ=&quot;:America/Los_Angeles&quot; date +&quot;%Y%m%d.%H%M%S&quot;)
+#version=${timeStamp}.${revNum}
+
+specPath=/etc/ansible/roles/build_rpm
+SOURCE_DIR=&quot;/var/lib/jenkins/rpmbuild/RPMS/noarch&quot;
+
+pwd
+cp ${specPath}/*frontend-cust* .
+
+echo &quot;Building package rpm in $SOURCE_DIR&quot;
+./build_rpm_frontend-cust.sh
+if [ &quot;$?&quot; != &quot;0&quot; ]; then
+	echo &quot;Packaging failed&quot;
+    exit 1
+fi
+
+
+pwd
+cp ${specPath}/*frontend-trader* .
+
+echo &quot;Building package rpm in $SOURCE_DIR&quot;
+./build_rpm_frontend-trader.sh
+if [ &quot;$?&quot; != &quot;0&quot; ]; then
+	echo &quot;Packaging failed&quot;
+    exit 1
+fi
+
+
+pwd
+cp ${specPath}/*frontend-central* .
+
+echo &quot;Building package rpm in $SOURCE_DIR&quot;
+./build_rpm_frontend-central.sh
+if [ &quot;$?&quot; != &quot;0&quot; ]; then
+	echo &quot;Packaging failed&quot;
+    exit 1
+fi
+
+</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+module1=&quot;frontend-cust&quot;
+module2=&quot;frontend-trader&quot;
+module3=&quot;frontend-central&quot;
+
+echo &quot;Publishes built RPMs to the local RPM repo.&quot;
+set -e
+if [ ! -z &quot;${DEBUG}&quot; ]; then
+  set -x
+fi
+
+SCRIPT_DIR=$( cd &quot;$( dirname &quot;${BASH_SOURCE[0]}&quot; )&quot; &amp;&amp; pwd )
+SRC_BASE=&quot;${SCRIPT_DIR}/../..&quot;
+
+DEPENDENCIES=(&quot;s3cmd&quot; &quot;createrepo&quot;)
+REGION=&quot;us-east-2&quot;
+SOURCE_DIR=&quot;/var/lib/jenkins/rpmbuild/RPMS/noarch/&quot;
+TARGET_BUCKET=&quot;otcxn-it-repo&quot;
+ROLLBACK_DIR1=&quot;/rpm/rollback/it/${module1}&quot;
+ROLLBACK_DIR2=&quot;/rpm/rollback/it/${module2}&quot;
+ROLLBACK_DIR3=&quot;/rpm/rollback/it/${module3}&quot;
+ #CACHE_DIR=&quot;/rpm/dev-cache&quot;
+
+for dep in &quot;${DEPENDENCIES[@]}&quot;
+do
+  if [ ! $(which ${dep}) ]; then
+      echo &quot;${dep} must be available.&quot;
+      exit 1
+  fi
+done
+
+if [ -z &quot;${SOURCE_DIR}&quot; ]; then
+  echo &quot;Source directory must be specified.&quot;
+  exit 1
+fi
+
+if [ -z &quot;${TARGET_BUCKET}&quot; ]; then
+  echo &quot;Target bucket must be specified.&quot;
+  exit 1
+fi
+
+cd $SOURCE_DIR
+package1=`ls -t otcxn-${module1}-* | head -1`
+package2=`ls -t otcxn-${module2}-* | head -1`
+package3=`ls -t otcxn-${module3}-* | head -1`
+
+echo &quot;Package : ${package1}&quot;
+echo &quot;Package : ${package2}&quot;
+echo &quot;Package : ${package3}&quot;
+
+TARGET_DIR=&quot;/rpm/${TARGET_BUCKET}&quot;
+
+# copy the RPM in and update the repo
+if ! [ -e &quot;$TARGET_DIR&quot; ]; then
+    mkdir -pv $TARGET_DIR
+fi
+
+cp -rv $SOURCE_DIR/${package1} $TARGET_DIR/noarch/${module1}
+cp -rv $SOURCE_DIR/${package2} $TARGET_DIR/noarch/${module2}
+cp -rv $SOURCE_DIR/${package3} $TARGET_DIR/noarch/${module3}
+echo &quot;Moved package $package1 to $TARGET_DIR/noarch/${module1}&quot;
+echo &quot;Moved package $package2 to $TARGET_DIR/noarch/${module2}&quot;
+echo &quot;Moved package $package3 to $TARGET_DIR/noarch/${module3}&quot;
+
+
+# Keep track of versions deployed
+PKG_DIR=$TARGET_DIR/pkg-info
+if ! [ -e &quot;$PKG_DIR&quot;]; then
+    mkdir -pv $PKG_DIR
+fi
+
+VERSION1=$(echo $package1 | sed &apos;s/.noarch.rpm//g&apos; | cut -d&apos;-&apos; -f3,4)
+VERSION2=$(echo $package2 | sed &apos;s/.noarch.rpm//g&apos; | cut -d&apos;-&apos; -f3,4)
+VERSION3=$(echo $package3 | sed &apos;s/.noarch.rpm//g&apos; | cut -d&apos;-&apos; -f3,4)
+
+echo $VERSION1 &gt;&gt; $PKG_DIR/${module1}-version.info
+echo $VERSION2 &gt;&gt; $PKG_DIR/${module2}-version.info
+echo $VERSION3 &gt;&gt; $PKG_DIR/${module3}-version.info
+
+
+&lt;&lt;COMMENT
+if [[ $GIT_TAG =~ &quot;NONE&quot; ]];
+then
+  echo &quot;This is an SNAPSHOT build - Skip tagging&quot;
+else
+  echo &quot;Release build - This build will be tagged&quot;
+    git tag $GIT_TAG
+  git push origin $GIT_TAG
+fi
+COMMENT
+#if [[ $VERSION =~ &quot;SNAPSHOT&quot; ]];
+#then
+#    echo &quot;This is an SNAPSHOT build - Skip tagging&quot;
+#else
+# echo &quot;Release build - This build will be tagged&quot;
+#    git tag $VERSION
+# git push origin $VERSION
+#fi
+
+# save a version file for rollback
+touch $ROLLBACK_DIR1/$VERSION1
+touch $ROLLBACK_DIR2/$VERSION2
+touch $ROLLBACK_DIR3/$VERSION3
+
+rm -rf $SOURCE_DIR/${package1}
+rm -rf $SOURCE_DIR/${package2}
+rm -rf $SOURCE_DIR/${package3}
+#sleep 60
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers>
+    <hudson.plugins.ws__cleanup.PreBuildCleanup plugin="ws-cleanup@0.37">
+      <deleteDirs>false</deleteDirs>
+      <cleanupParameter></cleanupParameter>
+      <externalDelete></externalDelete>
+      <disableDeferredWipeout>false</disableDeferredWipeout>
+    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+  </buildWrappers>
+</project>

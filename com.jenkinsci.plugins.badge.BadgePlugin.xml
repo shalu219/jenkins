@@ -1,0 +1,4 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<com.jenkinsci.plugins.badge.BadgePlugin plugin="badge@1.8">
+  <disableFormatHTML>false</disableFormatHTML>
+</com.jenkinsci.plugins.badge.BadgePlugin>

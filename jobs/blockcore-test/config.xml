@@ -1,0 +1,55 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.plugins.jira.JiraProjectProperty plugin="jira@3.0.10"/>
+  </properties>
+  <scm class="hudson.plugins.repo.RepoScm" plugin="repo@1.10.7">
+    <manifestRepositoryUrl>git@github.com:otcxn/otcxn-rfq-build.git</manifestRepositoryUrl>
+    <manifestFile>default.xml</manifestFile>
+    <manifestBranch>blockcore</manifestBranch>
+    <jobs>0</jobs>
+    <depth>0</depth>
+    <currentBranch>true</currentBranch>
+    <resetFirst>false</resetFirst>
+    <quiet>true</quiet>
+    <forceSync>false</forceSync>
+    <trace>false</trace>
+    <showAllChanges>false</showAllChanges>
+    <noTags>false</noTags>
+    <ignoreProjects class="linked-hash-set">
+      <string></string>
+    </ignoreProjects>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+timeStamp=$(TZ=&quot;:America/Los_Angeles&quot; date +&quot;%Y%m%d.%H%M%S&quot;)
+revNum=$(repo forall otcxn/blockcore -c &apos;git rev-parse --short HEAD&apos;)
+version=${timeStamp}.${revNum}
+
+echo &quot;Building Blockcore jar&quot;
+gradle --stacktrace clean build -Dversion=&quot;${version}&quot;
+
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers>
+    <hudson.plugins.ws__cleanup.PreBuildCleanup plugin="ws-cleanup@0.37">
+      <deleteDirs>false</deleteDirs>
+      <cleanupParameter></cleanupParameter>
+      <externalDelete></externalDelete>
+      <disableDeferredWipeout>false</disableDeferredWipeout>
+    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+  </buildWrappers>
+</project>

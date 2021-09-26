@@ -1,0 +1,48 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.plugins.jira.JiraProjectProperty plugin="jira@3.0.10"/>
+  </properties>
+  <scm class="hudson.plugins.repo.RepoScm" plugin="repo@1.10.7">
+    <manifestRepositoryUrl>git@github.com:otcxn/otcxn-rfq-build.git</manifestRepositoryUrl>
+    <manifestFile>default.xml</manifestFile>
+    <manifestBranch>ogg_universe</manifestBranch>
+    <jobs>0</jobs>
+    <depth>0</depth>
+    <currentBranch>true</currentBranch>
+    <resetFirst>false</resetFirst>
+    <quiet>true</quiet>
+    <forceSync>false</forceSync>
+    <trace>false</trace>
+    <showAllChanges>false</showAllChanges>
+    <noTags>false</noTags>
+    <ignoreProjects class="linked-hash-set">
+      <string></string>
+    </ignoreProjects>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+repo init -u git@github.com:otcxn/otcxn-rfq-build -b ogg_universe
+repo sync
+repo forall -c &quot;git checkout master&quot;
+repo forall -c &quot;git pull&quot;
+#repo forall -c &quot;git checkout mvn-artifactory&quot;
+mvn clean deploy -DskipTests -U -s ~/.m2/settings.xml
+</command>
+      <configuredLocalRules/>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

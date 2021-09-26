@@ -1,0 +1,130 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.plugins.buildblocker.BuildBlockerProperty plugin="build-blocker-plugin@1.7.3">
+      <useBuildBlocker>false</useBuildBlocker>
+      <blockLevel>GLOBAL</blockLevel>
+      <scanQueueFor>DISABLED</scanQueueFor>
+      <blockingJobs></blockingJobs>
+    </hudson.plugins.buildblocker.BuildBlockerProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.5.6">
+          <name>EnvironmentAction</name>
+          <description></description>
+          <randomName>choice-parameter-336190552883434</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <secureScript plugin="script-security@1.78">
+              <script>return [
+&quot;IT_DEPLOY&quot;,
+&quot;UAT_DEPLOY&quot;,
+&quot;PROD_DEPLOY&quot;,
+&quot;UAT_PROMOTE&quot;,
+&quot;PROD_PROMOTE&quot;
+]</script>
+              <sandbox>false</sandbox>
+            </secureScript>
+            <secureFallbackScript plugin="script-security@1.78">
+              <script>return[&apos;error&apos;]</script>
+              <sandbox>false</sandbox>
+            </secureFallbackScript>
+          </script>
+          <projectName>test-DeployParameter-Freestyle</projectName>
+          <projectFullName>test-DeployParameter-Freestyle</projectFullName>
+          <choiceType>PT_SINGLE_SELECT</choiceType>
+          <filterable>false</filterable>
+          <filterLength>1</filterLength>
+        </org.biouno.unochoice.ChoiceParameter>
+        <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.5.6">
+          <name>deployModule</name>
+          <description></description>
+          <randomName>choice-parameter-357922751321685</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <secureScript plugin="script-security@1.78">
+              <script>return[&apos;all&apos;,&apos;XE:crossingengine&apos;,&apos;PS:persistenceserver&apos;,&apos;SDS:staticdataserver&apos;,&apos;FG:fixgateway&apos;,&apos;CE:creditengine&apos;,&apos;FH:mktdatafeedhandler&apos;,&apos;TDB:tradedbwriter&apos;,&apos;TN:tradenotification&apos;,&apos;RG:rest_gateway&apos;,&apos;FM:fixmultiplexer&apos;]</script>
+              <sandbox>false</sandbox>
+            </secureScript>
+            <secureFallbackScript plugin="script-security@1.78">
+              <script>return[&apos;error&apos;]</script>
+              <sandbox>false</sandbox>
+            </secureFallbackScript>
+          </script>
+          <projectName>test-DeployParameter-Freestyle</projectName>
+          <projectFullName>test-DeployParameter-Freestyle</projectFullName>
+          <choiceType>PT_SINGLE_SELECT</choiceType>
+          <filterable>false</filterable>
+          <filterLength>1</filterLength>
+        </org.biouno.unochoice.ChoiceParameter>
+        <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.5.6">
+          <name>Tags</name>
+          <description></description>
+          <randomName>choice-parameter-336572998316112</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <secureScript plugin="script-security@1.78">
+              <script>import static groovy.io.FileType.FILES
+def itDeploy  = &quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;
+def uatDeploy  = &quot;/Users/shalu/rpm/liquimatch-uat-repo/noarch&quot;
+def prodDeploy  = &quot;/Users/shalu/rpm/liquimatch-prod-repo/noarch&quot;
+def uatPromote  = &quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;
+def prodPromote  = &quot;/Users/shalu/rpm/liquimatch-uat-repo/noarch&quot;
+def rootPath = &quot;&quot;
+
+List default_item = [&quot;None&quot;]
+
+if (EnvironmentAction.equals(&quot;IT_DEPLOY&quot;)){
+  rootPath = itDeploy
+} else if (EnvironmentAction.equals(&quot;UAT_DEPLOY&quot;)){
+  rootPath = uatDeploy
+} else if (EnvironmentAction.equals(&quot;PROD_DEPLOY&quot;)){
+  rootPath = prodDeploy
+} else if (EnvironmentAction.equals(&quot;UAT_PROMOTE&quot;)){
+  rootPath = uatPromote
+} else if (EnvironmentAction.equals(&quot;PROD_PROMOTE&quot;)){
+  rootPath = prodPromote
+} else {
+  return default_item
+}
+
+def dir = new File(rootPath);
+def files = [];
+dir.eachFileRecurse(FILES) {
+  if(it.name.endsWith(&apos;.rpm&apos;)) {
+    files &lt;&lt; it.getName()
+  }
+}
+return files.reverse();</script>
+              <sandbox>false</sandbox>
+            </secureScript>
+            <secureFallbackScript plugin="script-security@1.78">
+              <script>return[&apos;error&apos;]</script>
+              <sandbox>false</sandbox>
+            </secureFallbackScript>
+          </script>
+          <projectName>test-DeployParameter-Freestyle</projectName>
+          <projectFullName>test-DeployParameter-Freestyle</projectFullName>
+          <parameters class="linked-hash-map"/>
+          <referencedParameters>EnvironmentAction</referencedParameters>
+          <choiceType>PT_SINGLE_SELECT</choiceType>
+          <filterable>true</filterable>
+          <filterLength>2</filterLength>
+        </org.biouno.unochoice.CascadeChoiceParameter>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders/>
+  <publishers/>
+  <buildWrappers/>
+</project>
