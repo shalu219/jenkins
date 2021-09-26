@@ -1,0 +1,93 @@
+def getVariables(def serv) {
+    println("Selected Server is " + serv.toUpperCase())
+}
+
+pipeline {
+    /*A declarative pipeline*/
+
+    agent any
+    environment {
+        user="centos"
+        rpm="${server}"
+    }
+
+    stages {
+        stage('Setup parameters') {
+            steps {
+                script {
+                    properties([
+                        parameters([
+                            [$class: 'ChoiceParameter', 
+                            choiceType: 'PT_SINGLE_SELECT', 
+                            description: '', 
+                            filterLength: 1, 
+                            filterable: true, 
+                            name: 'server', 
+                            script: [
+                                $class: 'GroovyScript', 
+                                fallbackScript: [classpath: [], sandbox: false, script: 'return[\'error\']'], 
+                                script: [classpath: [], sandbox: false, script: 'return[\'it\',\'uat\',\'prod\']']]
+                            ], 
+
+                            [$class: 'ChoiceParameter', 
+                            choiceType: 'PT_SINGLE_SELECT', 
+                            description: '', 
+                            filterLength: 1, 
+                            filterable: true, 
+                            name: 'deployModule', 
+                            script: [
+                                $class: 'GroovyScript', 
+                                fallbackScript: [classpath: [], sandbox: false, script: 'return[\'error\']'], 
+                                script: [classpath: [], sandbox: false, script: 'return[\'all\',\'XE:crossingengine\',\'PS:persistenceserver\',\'SDS:staticdataserver\',\'FG:fixgateway\',\'CE:creditengine\',\'FH:mktdatafeedhandler\',\'TDB:tradedbwriter\',\'TN:tradenotification\',\'RG:rest_gateway\',\'FM:fixmultiplexer\']']]
+                            ], 
+
+                            [$class: 'FileSystemListParameterDefinition', 
+                            description: '', 
+                            name: 'version', 
+                            nodeName: 'master', 
+                            path: '/Users/shalu/rpm/liquimatch-development-repo/noarch', 
+                            regexExcludePattern: '', 
+                            regexIncludePattern: '', 
+                            selectedType: 'FILE', 
+                            sortByLastModified: false, 
+                            sortReverseOrder: true],
+
+                        ])
+                    ])
+                }
+            }
+        }
+        stage('Initialize the variables') {
+            steps {
+                script {
+                    app = sh(script:"echo ${deployModule} | cut -d \":\" -f1", returnStdout:true).trim()
+                    subModule = sh(script:"echo ${deployModule} | cut -d \":\" -f2", returnStdout:true).trim()
+                }
+            }            
+        }
+
+        stage('Promote Package') {
+            when {
+                expression { server == 'uat' || server == 'prod' }
+            }
+            steps {
+                println("Stage Promote Package:: <<${app}>><<${subModule}>>")
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                println("Stage Deploy:: <<${app}>><<${subModule}>>")
+                getVariables("${server}")
+            }
+            
+        }
+
+        stage('Installed Version') {
+            steps {
+                println("Stage Installed Version:: <<${app}>><<${subModule}>>")
+            }
+        }
+
+    }
+}
