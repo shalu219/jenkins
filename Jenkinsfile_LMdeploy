@@ -1,5 +1,171 @@
-def getVariables(def serv) {
-    println("Selected Server is " + serv.toUpperCase())
+// This Jenkinsfile it for IT > UAT > PROD
+properties([
+  parameters([
+    [
+      $class: 'ChoiceParameter',
+      choiceType: 'PT_SINGLE_SELECT',
+      name: 'EnvironmentAction',
+      script: [$class: 'GroovyScript', 
+        fallbackScript: [classpath: [], sandbox: false, script: 'return[\'error\']'], 
+        script: [classpath: [], sandbox: false, script: """
+return [
+"IT_DEPLOY",
+"UAT_DEPLOY",
+"PROD_DEPLOY",
+"UAT_PROMOTE",
+"PROD_PROMOTE"
+]
+        """]]
+    ],
+    [$class: 'ChoiceParameter', 
+    choiceType: 'PT_SINGLE_SELECT', 
+    description: '', 
+    filterLength: 1, 
+    filterable: true, 
+    name: 'deployModule', 
+    script: [
+        $class: 'GroovyScript', 
+        fallbackScript: [classpath: [], sandbox: false, script: 'return[\'error\']'], 
+        script: [classpath: [], sandbox: false, script: "return['all','XE:crossingengine','PS:persistenceserver','SDS:staticdataserver','FG:fixgateway','CE:creditengine','FH:mktdatafeedhandler','TDB:tradedbwriter','TN:tradenotification','RG:rest_gateway','FM:fixmultiplexer']"]]
+    ], 
+    [
+      $class: 'CascadeChoiceParameter',
+      choiceType: 'PT_SINGLE_SELECT',
+      name: 'version',
+      filterLength: 2, 
+      filterable: true, 
+      referencedParameters: 'EnvironmentAction',
+      script: [
+        $class: 'GroovyScript', 
+        fallbackScript: [classpath: [], sandbox: false, script: 'return[\'error\']'], 
+        script: [classpath: [], sandbox: false, 
+        script: """
+import static groovy.io.FileType.FILES
+def itDeploy  = "/Users/shalu/rpm/liquimatch-it-repo/noarch"
+def uatDeploy  = "/Users/shalu/rpm/liquimatch-uat-repo/noarch"
+def prodDeploy  = "/Users/shalu/rpm/liquimatch-prod-repo/noarch"
+def uatPromote  = "/Users/shalu/rpm/liquimatch-it-repo/noarch"
+def prodPromote  = "/Users/shalu/rpm/liquimatch-uat-repo/noarch"
+def rootPath = ""
+
+List default_item = ["None"]
+
+if (EnvironmentAction.equals("IT_DEPLOY")){
+  rootPath = itDeploy
+} else if (EnvironmentAction.equals("UAT_DEPLOY")){
+  rootPath = uatDeploy
+} else if (EnvironmentAction.equals("PROD_DEPLOY")){
+  rootPath = prodDeploy
+} else if (EnvironmentAction.equals("UAT_PROMOTE")){
+  rootPath = uatPromote
+} else if (EnvironmentAction.equals("PROD_PROMOTE")){
+  rootPath = prodPromote
+} else {
+  return default_item
+}
+
+def dir = new File(rootPath);
+def files = [];
+dir.eachFileRecurse(FILES) {
+  if(it.name.endsWith('.noarch.rpm')) {
+    files << it.getName()
+  }
+}
+//return files.reverse();
+return files
+        """]]
+    ],
+    [
+      $class: 'ChoiceParameter',
+      choiceType: 'PT_SINGLE_SELECT',
+      name: 'rollback',
+      script: [$class: 'GroovyScript', 
+        fallbackScript: [classpath: [], sandbox: false, script: 'return[\'error\']'], 
+        script: [classpath: [], sandbox: false, script: "return['no','yes']"]]
+    ]
+ ])
+])
+
+def promotePackage(def SRC_BUCKET, def TAR_BUCKET) {
+    script {
+        SOURCE_DIR="${home_dir}/rpm/${SRC_BUCKET}"
+        TARGET_DIR="${home_dir}/rpm/${TAR_BUCKET}"
+        CACHE_DIR="${TARGET_DIR}/${server}-cache"
+        PKG_TARGET_DIR="${TARGET_DIR}/pkg-info"
+        
+        println("Vars inside promotePackage:" + SOURCE_DIR + TARGET_DIR + CACHE_DIR + PKG_TARGET_DIR)
+        if (!fileExists("${SOURCE_DIR}")) {
+            println("ERROR: ${SOURCE_DIR} does not exists")
+            sh 'exit 1';
+        }
+        if (!fileExists("${TARGET_DIR}")) {
+            sh "mkdir -pv ${TARGET_DIR}"
+        }
+        if (!fileExists("${TARGET_DIR}/noarch")) {
+            sh "mkdir -pv ${TARGET_DIR}/noarch"
+        }
+        if (fileExists("${TARGET_DIR}/noarch/${version}")) {
+            println("ERROR: Package already Promoted to " + server)
+            println("Please start " + server + "_DEPLOY for deploy only")
+            sh 'exit 1';
+        }
+    }
+    script {
+        if ("${deployModule}" != "all") {
+            sh "cp -rv $SOURCE_DIR/noarch/$version $TARGET_DIR/noarch/"
+        }
+        else {
+            allVer = sh(script:"echo $version | cut -d '-' -f3", returnStdout:true).trim()
+            sh "cp -rv $SOURCE_DIR/noarch/*${allVer} $TARGET_DIR/noarch/"
+            sh "ls -ltr $TARGET_DIR/noarch/*${allVer}"
+        }
+    }    
+    
+    def UPDATE = ""
+    if (fileExists("$TARGET_DIR/noarch/repodata/repomd.xml")) {
+        UPDATE = "--update"
+    }
+    echo "TEST OUTPUT:: <<${UPDATE}>><<${CACHE_DIR}>><<${SOURCE_DIR}>><<${TARGET_DIR}>>"
+    //sh "createrepo --cachedir=$CACHE_DIR --workers 4 -v $UPDATE --deltas $TARGET_DIR/ --max-delta-rpm-size 399999999"
+}
+def promoteTag(def SRC_BUCKET, def TAR_BUCKET) {
+    script {
+        SOURCE_DIR="${home_dir}/rpm/${SRC_BUCKET}"
+        TARGET_DIR="${home_dir}/rpm/${TAR_BUCKET}"
+        PKG_TARGET_DIR="${TARGET_DIR}/pkg-info"
+        ROLLBACK_DIR="${home_dir}/rpm/rollback/${server}/ogguniverse"
+
+        if (!fileExists("${PKG_TARGET_DIR}")) {
+            sh "mkdir -pv ${PKG_TARGET_DIR}"
+        }
+        //VERSION = sh(script:"ls -t ${TARGET_DIR}/noarch/${version} | head -n1 | cut -d'/' -f7 | cut -d'-' -f3", returnStdout:true).trim()
+        sh "echo ${pkgVERSION} >> ${PKG_TARGET_DIR}/version.info"
+        sh "touch $ROLLBACK_DIR/${pkgVERSION}"
+
+        if (!fileExists("${TARGET_DIR}/tags")) {
+            sh "mkdir -pv ${TARGET_DIR}/tags"
+        }
+        PROMOTE_TAG = sh(script:"ls -t $SOURCE_DIR/tags | head -n1", returnStdout:true).trim()
+
+        sh "cp -rv ${SOURCE_DIR}/tags/${PROMOTE_TAG} ${TARGET_DIR}/tags/"
+        println("Tag promoted: " + PROMOTE_TAG)
+    }
+}
+def deployOnServer() {
+    println("rollback=${rollback} host=${host} user=${user} rpm=${rpm} verSubModule=${verSubModule}")
+    script {
+        if ("${deployModule}" != "all") {
+            status = sh(returnStatus: true, script: "sudo ansible-playbook -u $user $ansibleDir/playbook/liquimatchDeploy.yml --tags \"submodule\" --extra-vars \"rollback=${rollback} host=${host} user=${user} rpm=${rpm} verSubModule=${verSubModule}\"")
+        } else {
+            verAllModule = sh(script:"echo $verSubModule | cut -d '-' -f2,3", returnStdout:true).trim()
+            status = sh(returnStatus: true, script: "sudo ansible-playbook -u $user $ansibleDir/playbook/liquimatchDeploy.yml --tags \"fullLM\" --extra-vars \"rollback=${rollback} host=${host} user=${user} rpm=${rpm} verAllModule=${verAllModule} LM_VERSION=${LM_VERSION}\"")
+        }
+        
+        if (status != 0) {
+            println("Deploy Failed")
+            sh 'exit 1'
+        }
+    }
 }
 
 pipeline {
@@ -7,85 +173,133 @@ pipeline {
 
     agent any
     environment {
+        home_dir="/Users/shalu"
         user="centos"
-        rpm="${server}"
+        LM_VERSION="dt-0.47-SNAPSHOT"
+        ansibleDir="/Users/shalu/git-user-repo/ansible"
+        //ansibleDir="/etc/ansible"
     }
 
     stages {
-        stage('Setup parameters') {
-            steps {
-                script {
-                    properties([
-                        parameters([
-                            [$class: 'ChoiceParameter', 
-                            choiceType: 'PT_SINGLE_SELECT', 
-                            description: '', 
-                            filterLength: 1, 
-                            filterable: true, 
-                            name: 'server', 
-                            script: [
-                                $class: 'GroovyScript', 
-                                fallbackScript: [classpath: [], sandbox: false, script: 'return[\'error\']'], 
-                                script: [classpath: [], sandbox: false, script: 'return[\'it\',\'uat\',\'prod\']']]
-                            ], 
-
-                            [$class: 'ChoiceParameter', 
-                            choiceType: 'PT_SINGLE_SELECT', 
-                            description: '', 
-                            filterLength: 1, 
-                            filterable: true, 
-                            name: 'deployModule', 
-                            script: [
-                                $class: 'GroovyScript', 
-                                fallbackScript: [classpath: [], sandbox: false, script: 'return[\'error\']'], 
-                                script: [classpath: [], sandbox: false, script: 'return[\'all\',\'XE:crossingengine\',\'PS:persistenceserver\',\'SDS:staticdataserver\',\'FG:fixgateway\',\'CE:creditengine\',\'FH:mktdatafeedhandler\',\'TDB:tradedbwriter\',\'TN:tradenotification\',\'RG:rest_gateway\',\'FM:fixmultiplexer\']']]
-                            ], 
-
-                            [$class: 'FileSystemListParameterDefinition', 
-                            description: '', 
-                            name: 'version', 
-                            nodeName: 'master', 
-                            path: '/Users/shalu/rpm/liquimatch-development-repo/noarch', 
-                            regexExcludePattern: '', 
-                            regexIncludePattern: '', 
-                            selectedType: 'FILE', 
-                            sortByLastModified: false, 
-                            sortReverseOrder: true],
-
-                        ])
-                    ])
-                }
-            }
-        }
         stage('Initialize the variables') {
             steps {
                 script {
-                    app = sh(script:"echo ${deployModule} | cut -d \":\" -f1", returnStdout:true).trim()
-                    subModule = sh(script:"echo ${deployModule} | cut -d \":\" -f2", returnStdout:true).trim()
+                    server = sh(script:"echo ${EnvironmentAction} | cut -d '_' -f1", returnStdout:true).trim()
+                    action = sh(script:"echo ${EnvironmentAction} | cut -d '_' -f2", returnStdout:true).trim()
+                    rpm = server.toLowerCase()
+                    app = sh(script:"echo ${deployModule} | cut -d ':' -f1", returnStdout:true).trim()
+                    subModule = sh(script:"echo ${deployModule} | cut -d ':' -f2", returnStdout:true).trim()
+                    verSubModule = sh(script:"echo ${version} | sed 's/.noarch.rpm//g'", returnStdout:true).trim()
+                    pkgVERSION = sh(script:"echo ${version} | cut -d '-' -f3", returnStdout:true).trim()
+                    verCheckModule = sh(script:"echo ${version} | sed 's/.noarch.rpm//g' | cut -d '-' -f1", returnStdout:true).trim()
+
+                    println("All vars :" + server + ":" + action + ":" + rpm + ":" + app + ":" + subModule + ":" + verSubModule + ":" + pkgVERSION + ":" + verCheckModule)
+
+                    if ( app != verCheckModule ) {
+                        println("ERROR: choose correct subModule and version")
+                        sh 'exit 1'
+                    }
                 }
-            }            
+            }
+        }
+        stage('PROD Confirmation') {
+            when {
+                expression { server == 'PROD' }
+            }
+            steps {
+                script {
+                    if ( server == "PROD") {
+                        timeout(3) {    // timeout after 3 mins
+                            script {
+                                input(message: 'You have selected PROD. Do you want to continue?', ok: 'Proceed')
+                            }
+                        }
+                    }
+                }
+            }
+            
         }
 
         stage('Promote Package') {
             when {
-                expression { server == 'uat' || server == 'prod' }
+                expression { action == 'PROMOTE' }
             }
             steps {
-                println("Stage Promote Package:: <<${app}>><<${subModule}>>")
+                println("Stage Promote Package:: <<${server}>><<${action}>>")
+                script {
+                    //def repo = ['s3cmd', 'createrepo']
+                    def repo = ['s3cmd']
+                    for (int i = 0; i < repo.size(); ++i) {
+                        echo "Testing the ${repo[i]} repo"
+                        check = sh(script:"which ${repo[i]}", returnStdout:true).trim()
+                        echo check
+                    }
+
+                    if ( server == "UAT") {
+                        SOURCE_BUCKET="liquimatch-development-repo"
+                        TARGET_BUCKET="liquimatch-uat-repo"
+                    } else if ( server == "PROD") {
+                        SOURCE_BUCKET="liquimatch-uat-repo"
+                        TARGET_BUCKET="liquimatch-prod-repo"
+                    }
+                    println("Check SOURCE_BUCKET and TARGET_BUCKET variables :" + SOURCE_BUCKET + ":" + TARGET_BUCKET)
+                    promotePackage(SOURCE_BUCKET, TARGET_BUCKET)
+                    promoteTag(SOURCE_BUCKET, TARGET_BUCKET)
+                }
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy IT') {
+            when {
+                expression { server == 'IT' }
+            }
             steps {
-                println("Stage Deploy:: <<${app}>><<${subModule}>>")
-                getVariables("${server}")
+                println("Stage Deploy:: <<${server}>><<${action}>>")
+                script {
+                    user="centos"
+                    host="host" + server
+                    rpm="development"
+                }
+                println("User:Host:RPM::" + user + host + rpm)
+                deployOnServer()
+            }
+            
+        }
+        stage('Deploy UAT') {
+            when {
+                expression { server == 'UAT' }
+            }
+            steps {
+                println("Stage Deploy:: <<${server}>><<${action}>>")
+                script {
+                    user="centos"
+                    host="OTCXN-" + server
+                }
+                println("User:Host:RPM::" + user + host + rpm)
+                deployOnServer()
+            }
+            
+        }
+        stage('Deploy PROD') {
+            when {
+                expression { server == 'PROD' }
+            }
+            steps {
+                println("Stage Deploy:: <<${server}>><<${action}>>")
+                script {
+                    user="otcxn"
+                    host="LD4-OTCXN-" + server
+                }
+                println("User:Host:RPM::" + user + host + rpm)
+                deployOnServer()
             }
             
         }
 
         stage('Installed Version') {
             steps {
-                println("Stage Installed Version:: <<${app}>><<${subModule}>>")
+                println("Stage Installed Version:: <<${server}>><<${action}>>")
+                sh "sudo ansible -u $user -a \"rpm -qa ${app} warn=False\" ${host} | tail -1"
             }
         }
 

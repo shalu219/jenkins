@@ -1,26 +1,26 @@
 def rpm = "development"
 def otcxn_dir = "/Users/shalu/.m2/repository/com/otcxn"
 //def otcxn_dir = "/var/lib/jenkins/.m2/repository/com/otcxn"
-def getTagExist(def sm) {
-    println("subModule is "+ sm + ", fromBranch is " + fromBranch)
+def checkoutBranch() {
+    println("subModule is "+ app + ", and fromBranch is " + fromBranch)
     script{
-        tagExist = sh(script:"git -C ./${sm} branch -a | grep ${fromBranch} | tr -d \" \"", returnStdout:true).trim()
+        tagExist = sh(script:"git -C ./${subModule} branch -a | grep ${fromBranch} | tr -d \" \"", returnStdout:true).trim()
     }   
 
     sh """#!/bin/bash
     set -e
     echo "tagExist=${tagExist}"
     if [ ! -z "$tagExist" ]; then
-        repo forall ${sm} -c "git checkout origin/${fromBranch}"
+        repo forall ${subModule} -c "git checkout origin/${fromBranch}"
         echo "Status after branch checkout"
         repo forall -c "git status"
     else
-        echo "ERROR: Branch ${fromBranch} does not exist in ${sm}"
+        echo "ERROR: Branch ${fromBranch} does not exist in ${subModule}"
         exit 1
     fi
     """
 }
-def publishPackage(def app) {
+def publishPackage() {
     script {
         if ("${buildModule}" != "all") {
             rpmPackage = sh(script:"find $SOURCE_DIR -name \"${app}*.noarch.rpm\"", returnStdout:true).trim()
@@ -35,12 +35,13 @@ def publishPackage(def app) {
     echo "TEST OUTPUT:: <<${UPDATE}>><<${CACHE_DIR}>><<${SOURCE_DIR}>><<${TARGET_DIR}>>"
     //createrepo --cachedir=$CACHE_DIR --workers 4 -v $UPDATE --deltas $TARGET_DIR/ --max-delta-rpm-size 399999999
 }
-def gitTagVersion(def app) {
+def gitTagVersion() {
     script {
         if ("${buildModule}" != "all") {
                 VERSION = sh(script:"ls -t ${TARGET_DIR}/noarch/${app}* | head -n1 | cut -d'/' -f7 | cut -d'-' -f3", returnStdout:true).trim()
             } else {
                 VERSION = sh(script:"ls -t ${TARGET_DIR}/noarch | head -n1 | cut -d'-' -f3", returnStdout:true).trim()
+                sh "touch ${TARGET_DIR}/noarch/all-dt-${VERSION}"
             }
         sh "echo ${VERSION} >> ${PKG_DIR}/version.info"
     }
@@ -120,6 +121,7 @@ pipeline {
                 script {
                     app = sh(script:"echo ${buildModule} | cut -d \":\" -f1", returnStdout:true).trim()
                     subModule = sh(script:"echo ${buildModule} | cut -d \":\" -f2", returnStdout:true).trim()
+                    timeStamp = sh(script:"date +\"%Y%m%d%H%M%S\"", returnStdout:true).trim()
                 }
             }            
         }
@@ -139,7 +141,7 @@ pipeline {
                 """
                 script {
                     if ("${buildModule}" != "all") {
-                        getTagExist("${subModule}")
+                        checkoutBranch()
                     }
                 }
 
@@ -159,6 +161,9 @@ pipeline {
 
                 echo "BUILDING 'mvn clean deploy'"
                 #mvn clean deploy -DskipTests -U -s /var/lib/jenkins/.m2/settings.xml
+                touch ${SOURCE_DIR}/noarch/XE-dt-0.47_SNAPSHOT${timeStamp}.noarch.rpm
+                touch ${SOURCE_DIR}/noarch/FG-dt-0.47_SNAPSHOT${timeStamp}.noarch.rpm
+                touch ${SOURCE_DIR}/noarch/FM-dt-0.47_SNAPSHOT${timeStamp}.noarch.rpm
                 """
             }
         }
@@ -175,6 +180,7 @@ pipeline {
 
                 echo "BUILDING 'mvn clean deploy' for ${app}"
                 #mvn clean deploy -pl ${subModule} -DskipTests -U -s ~/.m2/settings.xml --also-make
+                touch ${SOURCE_DIR}/noarch/${app}-dt-0.47_SNAPSHOT${timeStamp}.noarch.rpm
                 """
             }
         }
@@ -191,29 +197,35 @@ pipeline {
                         check = sh(script:"which ${repo[i]}", returnStdout:true).trim()
                         echo check
                     }
-                }
 
+                    if (!fileExists("${SOURCE_DIR}")) {
+                        println("ERROR: ${SOURCE_DIR} does not exists")
+                        sh 'exit 1';
+                    }
+                    if (!fileExists("${TARGET_DIR}")) {
+                        sh "mkdir -pv ${TARGET_DIR}"
+                    }
+                    if (!fileExists("${PKG_DIR}")) {
+                        sh "mkdir -pv ${PKG_DIR}"
+                    }
+                    /*
+                    if (!${TARGET_BUCKET}?.trim()) {
+                        println(TARGET_BUCKET + " is null or empty.")
+                    }*/
+
+                }
+                
                 sh """#!/bin/bash
                 set -e
-                if [ -z "${SOURCE_DIR}" ]; then
-                    echo "ERROR: Source directory must be specified."
-                    exit 1
-                fi
                 if [ -z "${TARGET_BUCKET}" ]; then
                     echo "ERROR: Target bucket must be specified."
                     exit 1
                 fi
-                if ! [ -e "${TARGET_DIR}"]; then
-                    mkdir -pv ${TARGET_DIR}
-                fi
-                if ! [ -e "${PKG_DIR}"]; then
-                    mkdir -pv ${PKG_DIR}
-                fi
-                """
-                publishPackage("${app}")
-                gitTagVersion("${app}")
+                """ 
 
-
+                publishPackage()
+                gitTagVersion()
+                sh "rm -rf ${SOURCE_DIR}/noarch/*"
             }
         }
     }
