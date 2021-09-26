@@ -13,6 +13,12 @@ echo "cmd1=" + cmd1
 myVar = sh(script:"<shell command>", returnStdout:true).trim()
 check = sh(script:'which s3cmd', returnStdout:true).trim()		--> /usr/local/bin/s3cmd
 
+status = sh(returnStatus: true, script: "<shell command>")
+if (status != 0) {
+    println("Failed")
+    sh 'exit 1'
+}
+
         stage('Initialize the variables') {
             steps {
                 script {
@@ -62,6 +68,12 @@ Using brackets:
     } else {
         echo 'No'
     }
+
+#IF_ELSE:
+//Is null or empty check in Groovy
+if (!someString?.trim()) {
+    logger.lifecycle("the string is null or empty.")
+}
 
 #SAMPLE STAGE BLOCK WITH OPTIONAL script, sh
         stage('SAMPLE') {
