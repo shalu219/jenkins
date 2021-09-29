@@ -37,3 +37,18 @@ dir.traverse(type: FILES, maxDepth: 0) { files.add(it) }
 files.each {
   println it.path
 }
+
+/* working fine 
+def dir = new File(rootPath);
+def files = [];
+dir.eachFileRecurse(FILES) {
+  if(it.name.endsWith('.noarch.rpm')) {
+    //files << it.getName()
+    files << it
+  }
+}
+def result = files.sort{ a,b -> b.lastModified() <=> a.lastModified() }*.name
+//return files.reverse();
+//return files
+print (result);
+*/
