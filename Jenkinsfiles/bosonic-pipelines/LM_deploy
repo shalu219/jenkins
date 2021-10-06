@@ -1,0 +1,353 @@
+// This Jenkinsfile it for IT > UAT > PROD
+/*
+Created on Sep 1, 2021
+@author: shalusrivastava
+*/
+
+properties([
+  parameters([
+    [
+      $class: 'ChoiceParameter',
+      choiceType: 'PT_SINGLE_SELECT',
+      name: 'EnvironmentAction',
+      script: [$class: 'GroovyScript', 
+        fallbackScript: [classpath: [], sandbox: false, script: 'return[\'error\']'], 
+        script: [classpath: [], sandbox: false, script: """
+return [
+"IT_DEPLOY",
+"UAT_PROMOTE",
+"PROD_PROMOTE",
+"UAT_DEPLOY",
+"PROD_DEPLOY"
+]
+        """]]
+    ],
+    [$class: 'ChoiceParameter', 
+    choiceType: 'PT_SINGLE_SELECT', 
+    description: 'PROMOTION will be done for ALL modules irrespective of selected value', 
+    filterLength: 1, 
+    filterable: true, 
+    name: 'deployModule', 
+    script: [
+        $class: 'GroovyScript', 
+        fallbackScript: [classpath: [], sandbox: false, script: 'return[\'error\']'], 
+        script: [classpath: [], sandbox: false, script: "return['all','XE:crossingengine','PS:persistenceserver','SDS:staticdataserver','FG:fixgateway','CE:creditengine','FH:mktdatafeedhandler','TDB:tradedbwriter','TN:tradenotification','RG:rest_gateway','FM:fixmultiplexer']"]]
+    ], 
+    [
+      $class: 'CascadeChoiceParameter',
+      choiceType: 'PT_SINGLE_SELECT',
+      name: 'version',
+      filterLength: 2, 
+      filterable: true, 
+      referencedParameters: 'EnvironmentAction',
+      script: [
+        $class: 'GroovyScript', 
+        fallbackScript: [classpath: [], sandbox: false, script: 'return[\'error\']'], 
+        script: [classpath: [], sandbox: false, 
+        script: """
+import static groovy.io.FileType.FILES
+def itDeploy  = "/rpm/liquimatch-it-repo/noarch"
+def uatDeploy  = "/rpm/liquimatch-uat-repo/noarch"
+def prodDeploy  = "/rpm/liquimatch-prod-repo/noarch"
+def uatPromote  = "/rpm/liquimatch-it-repo/noarch"
+def prodPromote  = "/rpm/liquimatch-uat-repo/noarch"
+def rootPath = ""
+
+List all = ["all"]
+List default_item = ["None"]
+
+if (EnvironmentAction.equals("IT_DEPLOY")){
+  rootPath = itDeploy
+} else if (EnvironmentAction.equals("UAT_DEPLOY")){
+  rootPath = uatDeploy
+} else if (EnvironmentAction.equals("PROD_DEPLOY")){
+  rootPath = prodDeploy
+} else if (EnvironmentAction.equals("UAT_PROMOTE")){
+  return all
+} else if (EnvironmentAction.equals("PROD_PROMOTE")){
+  return all
+} else {
+  return default_item
+}
+
+def dir = new File(rootPath);
+def files = [];
+dir.eachFileRecurse(FILES) {
+  if(it.name.endsWith('.noarch.rpm')) {
+    //files << it.getName()
+    files << it
+  }
+}
+def result = files.sort{ a,b -> b.lastModified() <=> a.lastModified() }*.name
+
+//return files.reverse();
+//return files
+return result
+        """]]
+    ],
+    [
+      $class: 'ChoiceParameter',
+      choiceType: 'PT_SINGLE_SELECT',
+      name: 'rollback',
+      script: [$class: 'GroovyScript', 
+        fallbackScript: [classpath: [], sandbox: false, script: 'return[\'error\']'], 
+        script: [classpath: [], sandbox: false, script: "return['no','yes']"]]
+    ]
+ ])
+])
+
+def promotePackage(def SRC_BUCKET, def TAR_BUCKET) {
+    script {
+        SOURCE_DIR="/rpm/${SRC_BUCKET}"
+        TARGET_DIR="/rpm/${TAR_BUCKET}"
+        CACHE_DIR="${TARGET_DIR}/${rpm}-cache"
+        PKG_TARGET_DIR="${TARGET_DIR}/pkg-info"
+        
+        println(fileName)
+
+        if (!fileExists("${SOURCE_DIR}")) {
+            println("ERROR: ${SOURCE_DIR} does not exists")
+            sh 'exit 1';
+        }
+        if (!fileExists("${TARGET_DIR}")) {
+            sh "mkdir -pv ${TARGET_DIR}"
+        }
+        if (!fileExists("${TARGET_DIR}/noarch")) {
+            sh "mkdir -pv ${TARGET_DIR}/noarch"
+        }
+        if (!fileExists("${TARGET_DIR}/${rpm}-promote")) {
+            sh "mkdir -pv ${TARGET_DIR}/${rpm}-promote"
+        }
+
+        // getCurrentInstalledPackages
+        counter = 0
+        allModules = ['CE', 'XE', 'FG', 'FM', 'FH', 'OggGuiCommsBridge', 'OggGuiGateway', 'PS', 'RG', 'SDS', 'TDB', 'TN']
+        script {
+            allModules.each() {
+                println("Module: " + it)
+                verModule = sh(script:"sudo ansible -u ${user} -a \"rpm -qa ${it} warn=False\" ${fromHost} | tail -1", returnStdout:true).trim()
+                verModule = verModule + ".rpm"
+                println("Module Version: " + verModule)
+                if (!fileExists("${TARGET_DIR}/noarch/${verModule}")) {
+                    sh "cp -rv ${SOURCE_DIR}/noarch/${verModule} ${TARGET_DIR}/noarch/"
+                }
+                else {
+                    counter = counter + "1"
+                }
+
+                verDeployPackage = sh(script:"echo ${verModule} | sed 's/.noarch.rpm//g'", returnStdout:true).trim()
+                sh "echo ${verDeployPackage} >> ${fileName}"
+            }
+            if (counter == 12) {
+                println("All versions are already promoted")
+                sh "rm -rf ${fileName}"
+                sh 'exit 1'
+            }
+        }
+    }  
+    
+    def UPDATE = ""
+    if (fileExists("$TARGET_DIR/noarch/repodata/repomd.xml")) {
+        UPDATE = "--update"
+    }
+    sh "createrepo --cachedir=$CACHE_DIR --workers 4 -v $UPDATE --deltas $TARGET_DIR/ --max-delta-rpm-size 399999999"
+}
+def promoteTag(def SRC_BUCKET, def TAR_BUCKET) {
+    script {
+        SOURCE_DIR="/rpm/${SRC_BUCKET}"
+        TARGET_DIR="/rpm/${TAR_BUCKET}"
+        PKG_TARGET_DIR="${TARGET_DIR}/pkg-info"
+        ROLLBACK_DIR="/rpm/rollback/${rpm}/ogguniverse"
+
+        if (!fileExists("${PKG_TARGET_DIR}")) {
+            sh "mkdir -pv ${PKG_TARGET_DIR}"
+        }
+        //sh "echo ${pkgVERSION} >> ${PKG_TARGET_DIR}/version.info"
+        //sh "touch $ROLLBACK_DIR/${pkgVERSION}"
+
+        if (!fileExists("${TARGET_DIR}/tags")) {
+            sh "mkdir -pv ${TARGET_DIR}/tags"
+        }
+        PROMOTE_TAG = sh(script:"ls -t $SOURCE_DIR/tags | head -n1", returnStdout:true).trim()
+        sh "cp -rv ${SOURCE_DIR}/tags/${PROMOTE_TAG} ${TARGET_DIR}/tags/"
+        sh "echo ${PROMOTE_TAG} >> ${fileName}"
+        sh "mv ${fileName} ${TARGET_DIR}/${rpm}-promote/"
+
+        println("Tag promoted: " + PROMOTE_TAG)
+        println("Promotion File: " + fileName)
+    }
+}
+def deployOnServer() {
+    script {
+        if (action == "PROMOTE") {
+            sh "sudo ansible-playbook -u ${user} ${ansibleDir}/playbook/liquimatchDeploy.yml --tags \"beforePromote\" --extra-vars \"rollback=${rollback} host=${host} user=${user} rpm=${rpm}\""
+
+            def file = readFile(file: "${TARGET_DIR}/${rpm}-promote/${fileName}")
+            def modules = file.readLines()            
+            modules.each { String verSubModule ->
+                if (verSubModule.contains("${DEPLOY_VERSION}")) {
+                    println("Deploy: " + verSubModule)
+                    status = sh(returnStatus: true, script: "sudo ansible-playbook -u ${user} ${ansibleDir}/playbook/liquimatchDeploy.yml --tags \"promote\" --extra-vars \"rollback=${rollback} host=${host} user=${user} rpm=${rpm} verSubModule=${verSubModule}\"")
+                }
+            }
+
+            sh "sudo ansible-playbook -u ${user} ${ansibleDir}/playbook/liquimatchDeploy.yml --tags \"afterPromote\" --extra-vars \"rollback=${rollback} host=${host} user=${user} rpm=${rpm} LM_VERSION=${LM_VERSION}\""
+        }
+        else {
+            if ("${deployModule}" != "all") {
+                status = sh(returnStatus: true, script: "sudo ansible-playbook -u ${user} ${ansibleDir}/playbook/liquimatchDeploy.yml --tags \"submodule\" --extra-vars \"rollback=${rollback} host=${host} user=${user} rpm=${rpm} verSubModule=${verSubModule}\"")
+            } else {
+                verAllModule = sh(script:"echo $verSubModule | cut -d '-' -f2,3", returnStdout:true).trim()
+                status = sh(returnStatus: true, script: "sudo ansible-playbook -u ${user} ${ansibleDir}/playbook/liquimatchDeploy.yml --tags \"fullLM\" --extra-vars \"rollback=${rollback} host=${host} user=${user} rpm=${rpm} verAllModule=${verAllModule} LM_VERSION=${LM_VERSION}\"")
+            }
+        }
+        
+        if (status != 0) {
+            println("Deploy Failed")
+            sh 'exit 1'
+        }
+    }
+}
+
+pipeline {
+    /*A declarative pipeline*/
+
+    agent any
+    environment {
+        user="centos"
+        LM_VERSION="dt-0.47-SNAPSHOT"
+        DEPLOY_VERSION="dt-0.47_SNAPSHOT"
+        ansibleDir="/etc/ansible"
+    }
+
+    stages {
+        stage('Initialize the variables') {
+            steps {
+                script {
+                    server = sh(script:"echo ${EnvironmentAction} | cut -d '_' -f1", returnStdout:true).trim()
+                    action = sh(script:"echo ${EnvironmentAction} | cut -d '_' -f2", returnStdout:true).trim()
+                    rpm = server.toLowerCase()
+                    app = sh(script:"echo ${deployModule} | cut -d ':' -f1", returnStdout:true).trim()
+                    subModule = sh(script:"echo ${deployModule} | cut -d ':' -f2", returnStdout:true).trim()
+                    verSubModule = sh(script:"echo ${version} | sed 's/.noarch.rpm//g'", returnStdout:true).trim()
+                    pkgVERSION = sh(script:"echo ${version} | cut -d '-' -f3", returnStdout:true).trim()
+                    verCheckModule = sh(script:"echo ${version} | sed 's/.noarch.rpm//g' | cut -d '-' -f1", returnStdout:true).trim()
+                    timeStamp = sh(script:"TZ=\":America/Los_Angeles\" date +\"%Y%m%d.%H%M%S\"", returnStdout:true).trim()
+                    fileName="LM-${server}-${timeStamp}"
+
+
+                    if ( deployModule != "all" ) {
+                        if ( action == "PROMOTE" ) {
+                            println("MESSAGE: PROMOTION will be done for ALL modules irrespective of selected deployModule")
+                        }
+                        else if ( app != verCheckModule ) {
+                            println("ERROR: choose correct subModule and version")
+                            sh 'exit 1'
+                        }
+                    }
+                }
+            }
+        }
+        stage('PROD Confirmation') {
+            when {
+                expression { server == 'PROD' }
+            }
+            steps {
+                script {
+                    if ( server == "PROD") {
+                        timeout(3) {    // timeout after 3 mins
+                            script {
+                                input(message: 'You have selected PROD. Do you want to continue?', ok: 'Proceed')
+                            }
+                        }
+                    }
+                }
+            }
+            
+        }
+
+        stage('Promote Package') {
+            when {
+                expression { action == 'PROMOTE' }
+            }
+            steps {
+                script {
+                    def repo = ['s3cmd', 'createrepo']
+                    //def repo = ['s3cmd']
+                    for (int i = 0; i < repo.size(); ++i) {
+                        check = sh(script:"which ${repo[i]}", returnStdout:true).trim()
+                    }
+
+                    if ( server == "UAT") {
+                        SOURCE_BUCKET="liquimatch-development-repo"
+                        TARGET_BUCKET="liquimatch-uat-repo"
+                        fromHost="hostIT"
+                    } else if ( server == "PROD") {
+                        SOURCE_BUCKET="liquimatch-uat-repo"
+                        TARGET_BUCKET="liquimatch-prod-repo"
+                        fromHost="OTCXN-UAT"
+                    }
+                    promotePackage(SOURCE_BUCKET, TARGET_BUCKET)
+                    promoteTag(SOURCE_BUCKET, TARGET_BUCKET)
+                }
+            }
+        }
+
+        stage('Deploy IT') {
+            when {
+                expression { server == 'IT' }
+            }
+            steps {
+                script {
+                    host="host" + server
+                    rpm="development"
+                }
+                deployOnServer()
+            }
+            
+        }
+        stage('Deploy UAT') {
+            when {
+                expression { server == 'UAT' }
+            }
+            steps {
+                script {
+                    host="OTCXN-" + server
+                }
+                deployOnServer()
+            }
+            
+        }
+        stage('Deploy PROD') {
+            when {
+                expression { server == 'PROD' }
+            }
+            steps {
+                script {
+                    user="otcxn"
+                    host="LD4-OTCXN-" + server
+                }
+                deployOnServer()
+            }
+            
+        }
+
+        stage('Installed Version') {
+            steps {
+                script {
+                    if (action == "PROMOTE") {
+                        sh "sudo ansible -u $user -a \"sudo yum list *${DEPLOY_VERSION}*\" ${host}"
+                        println("Promotion File: ${TARGET_DIR}/${rpm}-promote/" + fileName)
+                    }
+                    else if (action == "DEPLOY" && deployModule == "all") {
+                        sh "sudo ansible -u $user -a \"sudo yum list *${DEPLOY_VERSION}*\" ${host}"
+                    }
+                    else {
+                        sh "sudo ansible -u $user -a \"rpm -qa ${app} warn=False\" ${host} | tail -1"
+                    }
+                }
+            }
+        }
+
+    }
+}
