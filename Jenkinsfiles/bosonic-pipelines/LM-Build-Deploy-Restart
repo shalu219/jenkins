@@ -1,0 +1,37 @@
+// author : ssrivastava
+// date : sep 1 2021
+
+pipeline {
+    agent any
+
+    parameters {
+        string(defaultValue: "login_test.js", description: 'This is the parameter for JOB - Continuos Integration Bosonic', name: 'test_spec')
+    }
+
+    stages {
+        stage ("Build") {
+            steps {
+                echo 'Building "LM-Build-Pipeline"....'
+                build 'LM-Build-Pipeline'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying "LM-Deploy-Pipeline"....'
+                build 'LM-Deploy-Pipeline'
+            }
+        }
+        stage('Restart') {
+            steps {
+                echo 'Restarting "LM-RestartAllDev"..'
+                build 'LM-RestartAllDev'
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Testing with "Continuos Integration Bosonic"..'
+                build job: 'Continuos Integration Bosonic', parameters: [string(name: 'spec', value: String.valueOf(test_spec))]
+            }
+        }
+    }
+}
