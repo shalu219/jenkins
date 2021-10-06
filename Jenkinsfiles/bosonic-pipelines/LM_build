@@ -1,5 +1,7 @@
-// author : ssrivastava
-// date : sep 1 2021
+/*
+Created on Sep 1, 2021
+@author: shalusrivastava
+*/
 
 def rpm = "development"
 def otcxn_dir = "/var/lib/jenkins/.m2/repository/com/otcxn"
