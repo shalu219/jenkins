@@ -112,6 +112,7 @@
         <string>test-listing</string>
         <string>test-reactive-parameter</string>
         <string>test-script-FreeStyle</string>
+        <string>test-string</string>
       </jobNames>
       <jobFilters/>
       <columns>
@@ -142,9 +143,9 @@
             <comparator class="hudson.util.CaseInsensitiveComparator" reference="../../../../../../views/listView/jobNames/comparator"/>
           </default>
           <int>2</int>
-          <string>PATH</string>
+          <string>PATH_removed</string>
           <string>$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/shalu/bin</string>
-          <string>PATH+EXTRA</string>
+          <string>PATHxx+EXTRA</string>
           <string>/usr/bin:/bin/sh</string>
         </tree-map>
       </envVars>

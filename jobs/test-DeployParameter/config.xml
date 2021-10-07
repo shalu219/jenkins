@@ -21,7 +21,7 @@
       <parameterDefinitions>
         <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.5.6">
           <name>EnvironmentAction</name>
-          <randomName>choice-parameter-478922334445547</randomName>
+          <randomName>choice-parameter-496994147864346</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.GroovyScript">
             <secureScript plugin="script-security@1.78">
@@ -48,7 +48,7 @@ return [
         <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.5.6">
           <name>deployModule</name>
           <description></description>
-          <randomName>choice-parameter-478922334600952</randomName>
+          <randomName>choice-parameter-496994148407419</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.GroovyScript">
             <secureScript plugin="script-security@1.78">
@@ -68,7 +68,7 @@ return [
         </org.biouno.unochoice.ChoiceParameter>
         <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.5.6">
           <name>Tags</name>
-          <randomName>choice-parameter-478922334758503</randomName>
+          <randomName>choice-parameter-496994148719526</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.GroovyScript">
             <secureScript plugin="script-security@1.78">
@@ -224,6 +224,7 @@ pipeline {
     stages {
         stage(&apos;Initialize the variables&apos;) {
             steps {
+                println(&quot;Path:&quot; + PATH)
                 script {
                     //app = sh(script:&quot;echo ${deployModule} | cut -d \&quot;:\&quot; -f1&quot;, returnStdout:true).trim()
                     //subModule = sh(script:&quot;echo ${deployModule} | cut -d \&quot;:\&quot; -f2&quot;, returnStdout:true).trim()
