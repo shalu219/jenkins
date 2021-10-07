@@ -1,0 +1,189 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.plugins.buildblocker.BuildBlockerProperty plugin="build-blocker-plugin@1.7.3">
+      <useBuildBlocker>false</useBuildBlocker>
+      <blockLevel>GLOBAL</blockLevel>
+      <scanQueueFor>DISABLED</scanQueueFor>
+      <blockingJobs></blockingJobs>
+    </hudson.plugins.buildblocker.BuildBlockerProperty>
+  </properties>
+  <scm class="hudson.plugins.repo.RepoScm" plugin="repo@1.10.7">
+    <manifestRepositoryUrl>git@github.com:otcxn/otcxn-rfq-build.git</manifestRepositoryUrl>
+    <manifestFile>default.xml</manifestFile>
+    <manifestBranch>custodian-module-process</manifestBranch>
+    <jobs>0</jobs>
+    <depth>0</depth>
+    <currentBranch>true</currentBranch>
+    <resetFirst>false</resetFirst>
+    <quiet>true</quiet>
+    <forceSync>false</forceSync>
+    <trace>false</trace>
+    <showAllChanges>false</showAllChanges>
+    <noTags>false</noTags>
+    <ignoreProjects class="linked-hash-set">
+      <string></string>
+    </ignoreProjects>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+timeStamp=$(TZ=&quot;:America/Los_Angeles&quot; date +&quot;%Y%m%d.%H%M%S&quot;)
+revNum=$(repo forall otcxn/custodian-module-process -c &apos;git rev-parse --short HEAD&apos;)
+version=${timeStamp}.${revNum}
+
+echo &quot;Building Custodian jar&quot;
+gradle --stacktrace clean build -Dversion=&quot;${version}&quot;
+gradle :custodian-module-process:uploadArchives
+
+if [ &quot;$?&quot; == &quot;0&quot; ]; then
+   #generate tags for custodian build file
+   verNum=&quot;cust_${BUILD_NUMBER}_DO&quot;
+   echo &quot;VERNUM: $verNum&quot;
+   repo forall -i otcxn-rfq-build -c &quot;git tag $verNum&quot;
+   repo forall -i otcxn-rfq-build -c &quot;git push origin $verNum&quot;
+   repo forall -c &apos;echo &quot;$REPO_PROJECT&quot;; git rev-parse HEAD&apos; | sed &apos;N;s/\n/ /&apos; &gt; build.txt
+   echo &quot;tags: $verNum&quot; &gt;&gt; build.txt
+   
+   #-- cp build.txt $dstJar/conf/
+   cp build.txt src/custodian-module-process/src/main/resources
+   
+   specPath=&quot;/etc/ansible/roles/build_rpm&quot;
+   SOURCE_DIR=&quot;/var/lib/jenkins/rpmbuild/RPMS/noarch&quot;
+
+   cp ${specPath}/*custodian* .
+
+   echo &quot;Building package rpm in $SOURCE_DIR&quot;
+   ./build_rpm_custodian.sh
+   if [ &quot;$?&quot; != &quot;0&quot; ]; then
+	   echo &quot;Packaging failed&quot;
+       exit 1
+   fi
+
+else
+   echo &quot;Build failed&quot;
+   exit 1
+fi
+</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+module=&quot;custodian&quot;
+
+echo &quot;Publishes built RPMs to the local RPM repo.&quot;
+set -e
+if [ ! -z &quot;${DEBUG}&quot; ]; then
+  set -x
+fi
+
+SCRIPT_DIR=$( cd &quot;$( dirname &quot;${BASH_SOURCE[0]}&quot; )&quot; &amp;&amp; pwd )
+SRC_BASE=&quot;${SCRIPT_DIR}/../..&quot;
+
+DEPENDENCIES=(&quot;s3cmd&quot; &quot;createrepo&quot;)
+REGION=&quot;us-east-2&quot;
+SOURCE_DIR=&quot;/var/lib/jenkins/rpmbuild/RPMS/noarch/&quot;
+TARGET_BUCKET=&quot;otcxn-it-repo&quot;
+ROLLBACK_DIR=&quot;/rpm/rollback/it/${module}&quot;
+ #CACHE_DIR=&quot;/rpm/dev-cache&quot;
+
+for dep in &quot;${DEPENDENCIES[@]}&quot;
+do
+  if [ ! $(which ${dep}) ]; then
+      echo &quot;${dep} must be available.&quot;
+      exit 1
+  fi
+done
+
+if [ -z &quot;${SOURCE_DIR}&quot; ]; then
+  echo &quot;Source directory must be specified.&quot;
+  exit 1
+fi
+
+if [ -z &quot;${TARGET_BUCKET}&quot; ]; then
+  echo &quot;Target bucket must be specified.&quot;
+  exit 1
+fi
+
+cd $SOURCE_DIR
+package=`ls -t otcxn-${module}-* | head -1`
+echo &quot;Package : ${package}&quot;
+
+TARGET_DIR=&quot;/rpm/${TARGET_BUCKET}&quot;
+
+# copy the RPM in and update the repo
+if ! [ -e &quot;$TARGET_DIR&quot; ]; then
+    mkdir -pv $TARGET_DIR
+fi
+
+cp -rv $SOURCE_DIR/${package} $TARGET_DIR/noarch/${module}
+echo &quot;Moved package $package to $TARGET_DIR/noarch/${module}&quot;
+
+# Keep track of versions deployed
+PKG_DIR=$TARGET_DIR/pkg-info
+if ! [ -e &quot;$PKG_DIR&quot;]; then
+    mkdir -pv $PKG_DIR
+fi
+
+VERSION=$(echo $package | sed &apos;s/.noarch.rpm//g&apos; | cut -d&apos;-&apos; -f3,4)
+echo $VERSION &gt;&gt; $PKG_DIR/${module}-version.info
+
+&lt;&lt;COMMENT
+if [[ $GIT_TAG =~ &quot;NONE&quot; ]];
+then
+  echo &quot;This is an SNAPSHOT build - Skip tagging&quot;
+else
+  echo &quot;Release build - This build will be tagged&quot;
+    git tag $GIT_TAG
+  git push origin $GIT_TAG
+fi
+COMMENT
+#if [[ $VERSION =~ &quot;SNAPSHOT&quot; ]];
+#then
+#    echo &quot;This is an SNAPSHOT build - Skip tagging&quot;
+#else
+# echo &quot;Release build - This build will be tagged&quot;
+#    git tag $VERSION
+# git push origin $VERSION
+#fi
+
+# save a version file for rollback
+touch $ROLLBACK_DIR/$VERSION
+
+rm -rf $SOURCE_DIR/${package}
+#sleep 60
+</command>
+    </hudson.tasks.Shell>
+    <hudson.plugins.parameterizedtrigger.TriggerBuilder plugin="parameterized-trigger@2.35.2">
+      <configs>
+        <hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
+          <configs class="empty-list"/>
+          <projects>RPM Publish IT Packages</projects>
+          <condition>ALWAYS</condition>
+          <triggerWithNoParameters>false</triggerWithNoParameters>
+          <triggerFromChildProjects>false</triggerFromChildProjects>
+          <buildAllNodesWithLabel>false</buildAllNodesWithLabel>
+        </hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
+      </configs>
+    </hudson.plugins.parameterizedtrigger.TriggerBuilder>
+  </builders>
+  <publishers/>
+  <buildWrappers>
+    <hudson.plugins.ws__cleanup.PreBuildCleanup plugin="ws-cleanup@0.37">
+      <deleteDirs>false</deleteDirs>
+      <cleanupParameter></cleanupParameter>
+      <externalDelete></externalDelete>
+      <disableDeferredWipeout>false</disableDeferredWipeout>
+    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+  </buildWrappers>
+</project>

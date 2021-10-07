@@ -1,0 +1,289 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.41">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.3.9"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.3.9">
+      <jobProperties/>
+      <triggers/>
+      <parameters>
+        <string>fromBranch</string>
+        <string>buildModule</string>
+      </parameters>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>fromBranch</name>
+          <description>(Please do not put &quot;origin&quot; with branch name)</description>
+          <defaultValue>master</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>buildModule</name>
+          <description></description>
+          <choices>
+            <string>all</string>
+            <string>XE:crossingengine</string>
+            <string>PS:persistenceserver</string>
+            <string>SDS:staticdataserver</string>
+            <string>FG:fixgateway</string>
+            <string>CE:creditengine</string>
+            <string>FH:mktdatafeedhandler</string>
+            <string>TDB:tradedbwriter</string>
+            <string>TN:tradenotification</string>
+            <string>RG:rest_gateway</string>
+            <string>FM:fixmultiplexer</string>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <hudson.plugins.buildblocker.BuildBlockerProperty plugin="build-blocker-plugin@1.7.3">
+      <useBuildBlocker>false</useBuildBlocker>
+      <blockLevel>GLOBAL</blockLevel>
+      <scanQueueFor>DISABLED</scanQueueFor>
+      <blockingJobs></blockingJobs>
+    </hudson.plugins.buildblocker.BuildBlockerProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.74">
+    <script>def rpm = &quot;development&quot;
+def otcxn_dir = &quot;/Users/shalu/.m2/repository/com/otcxn&quot;
+//def otcxn_dir = &quot;/var/lib/jenkins/.m2/repository/com/otcxn&quot;
+def checkoutBranch() {
+    println(&quot;subModule is &quot;+ app + &quot;, and fromBranch is &quot; + fromBranch)
+    script{
+        tagExist = sh(script:&quot;git -C ./${subModule} branch -a | grep ${fromBranch} | tr -d \&quot; \&quot;&quot;, returnStdout:true).trim()
+    }   
+
+    sh &quot;&quot;&quot;#!/bin/bash
+    set -e
+    echo &quot;tagExist=${tagExist}&quot;
+    if [ ! -z &quot;$tagExist&quot; ]; then
+        repo forall ${subModule} -c &quot;git checkout origin/${fromBranch}&quot;
+        echo &quot;Status after branch checkout&quot;
+        repo forall -c &quot;git status&quot;
+    else
+        echo &quot;ERROR: Branch ${fromBranch} does not exist in ${subModule}&quot;
+        exit 1
+    fi
+    &quot;&quot;&quot;
+}
+def publishPackage() {
+    script {
+        if (&quot;${buildModule}&quot; != &quot;all&quot;) {
+            rpmPackage = sh(script:&quot;find $SOURCE_DIR -name \&quot;${app}*.noarch.rpm\&quot;&quot;, returnStdout:true).trim()
+            echo &quot;SubModule Package : &apos;${rpmPackage}&apos;&quot;
+        }
+    }
+    sh &quot;cp -rv $SOURCE_DIR $TARGET_DIR&quot;
+    def UPDATE = &quot;&quot;
+    if (fileExists(&quot;$TARGET_DIR/noarch/repodata/repomd.xml&quot;)) {
+        UPDATE = &quot;--update&quot;
+    }
+    echo &quot;TEST OUTPUT:: &lt;&lt;${UPDATE}&gt;&gt;&lt;&lt;${CACHE_DIR}&gt;&gt;&lt;&lt;${SOURCE_DIR}&gt;&gt;&lt;&lt;${TARGET_DIR}&gt;&gt;&quot;
+    //createrepo --cachedir=$CACHE_DIR --workers 4 -v $UPDATE --deltas $TARGET_DIR/ --max-delta-rpm-size 399999999
+}
+def gitTagVersion() {
+    script {
+        if (&quot;${buildModule}&quot; != &quot;all&quot;) {
+                VERSION = sh(script:&quot;ls -t ${TARGET_DIR}/noarch/${app}* | head -n1 | cut -d&apos;/&apos; -f7 | cut -d&apos;-&apos; -f3&quot;, returnStdout:true).trim()
+            } else {
+                VERSION = sh(script:&quot;ls -t ${TARGET_DIR}/noarch | head -n1 | cut -d&apos;-&apos; -f3&quot;, returnStdout:true).trim()
+                sh &quot;touch ${TARGET_DIR}/noarch/all-dt-${VERSION}&quot;
+            }
+        sh &quot;echo ${VERSION} &gt;&gt; ${PKG_DIR}/version.info&quot;
+    }
+    /*
+    if (&quot;${GIT_TAG}&quot; =~ &quot;NONE&quot;) {
+        echo &quot;This is an SNAPSHOT build - Skip tagging&quot;
+    } else {
+        echo &quot;Release build - This build will be tagged&quot;
+        cd ${WORKSPACE}/build
+        echo &quot;$GIT_TAG:&lt;&lt;${$GIT_TAG}&gt;&gt;&quot;
+        //git tag $GIT_TAG
+        //git push origin $GIT_TAG
+    } */
+    sh &quot;touch $ROLLBACK_DIR/$VERSION&quot;
+
+    echo &quot;tag version&quot;
+    timeStamp = sh(script:&quot;TZ=\&quot;:America/Los_Angeles\&quot; date +\&quot;%Y%m%d\&quot;&quot;, returnStdout:true).trim()
+    script {
+        if (&quot;${buildModule}&quot; != &quot;all&quot;) {
+            verNum=&quot;subModule_${app}_${BUILD_NUMBER}_${timeStamp}&quot;
+        } else {
+            verNum=&quot;OggUniverse_${BUILD_NUMBER}_${timeStamp}&quot;
+        }
+    }
+    echo &quot;VERSION: ${verNum} &quot;
+    sh &quot;&quot;&quot;#!/bin/bash
+    set -e
+    cd ${WORKSPACE}/build
+    #git tag ${verNum}
+    #git push origin ${verNum}
+
+    mkdir -p ${TARGET_DIR}/tags
+    touch ${TARGET_DIR}/tags/${verNum}
+    &quot;&quot;&quot;
+}
+
+pipeline {
+    /*A declarative pipeline*/
+
+    agent any
+    parameters {
+        string(name: &apos;fromBranch&apos;, defaultValue: &apos;master&apos;, description: &apos;(Please do not put &quot;origin&quot; with branch name)&apos;)
+        choice(name: &apos;buildModule&apos;, choices: [&apos;all&apos;, &apos;XE:crossingengine&apos;, &apos;PS:persistenceserver&apos;, &apos;SDS:staticdataserver&apos;, &apos;FG:fixgateway&apos;, &apos;CE:creditengine&apos;, &apos;FH:mktdatafeedhandler&apos;, &apos;TDB:tradedbwriter&apos;, &apos;TN:tradenotification&apos;, &apos;RG:rest_gateway&apos;, &apos;FM:fixmultiplexer&apos;], description: &apos;&apos;)
+        //choice(name: &apos;server&apos;, choices: [&apos;&apos;, &apos;development&apos;, &apos;qa&apos;, &apos;uat&apos;, &apos;prod&apos;], description: &apos;&apos;)
+    }
+
+    environment {
+        home_dir=&quot;/Users/shalu&quot;
+        SOURCE_DIR=&quot;${WORKSPACE}/package/&quot;
+        //SOURCE_DIR=&quot;**/**/rpm/**/RPMS/*&quot;
+        TARGET_BUCKET=&quot;liquimatch-${rpm}-repo&quot;
+        TARGET_DIR=&quot;${home_dir}/rpm/${TARGET_BUCKET}&quot;
+        //TARGET_DIR = &quot;/rpm/${TARGET_BUCKET}&quot;
+        CACHE_DIR=&quot;${TARGET_DIR}/dev-cache&quot;
+        PKG_DIR=&quot;${TARGET_DIR}/pkg-info&quot;
+        ROLLBACK_DIR=&quot;${home_dir}/rpm/rollback/it/ogguniverse&quot;
+        //ROLLBACK_DIR=&quot;/rpm/rollback/it/ogguniverse&quot;
+    }
+
+    stages {
+        stage(&apos;Verify inputs&apos;) {
+            steps {
+                sh &apos;&apos;&apos;#!/bin/bash
+                set -e
+                if [ -z &quot;${fromBranch}&quot; ]; then
+                    echo
+                    echo &quot;ERROR: Parameters can not be empty.&quot;
+                    echo &quot;Branch Passed:&lt;&lt;${fromBranch}&gt;&gt;&quot;
+                    exit 1
+                fi
+                &apos;&apos;&apos;
+            }
+        }
+
+        stage(&apos;Initialize the variables&apos;) {
+            steps {
+                script {
+                    app = sh(script:&quot;echo ${buildModule} | cut -d \&quot;:\&quot; -f1&quot;, returnStdout:true).trim()
+                    subModule = sh(script:&quot;echo ${buildModule} | cut -d \&quot;:\&quot; -f2&quot;, returnStdout:true).trim()
+                    timeStamp = sh(script:&quot;date +\&quot;%Y%m%d%H%M%S\&quot;&quot;, returnStdout:true).trim()
+                }
+            }            
+        }
+        
+        stage(&apos;Checkout branch&apos;) {
+            steps {
+                sh &quot;&quot;&quot;#!/bin/bash
+                set -e
+                if [ -d ${otcxn_dir} ]; then 
+                    rm -rf ${otcxn_dir};
+                    echo &quot;BT libs removed from &lt;&lt;${otcxn_dir}&gt;&gt;&quot;
+                fi
+                repo init -u git@github.com:otcxn/otcxn-rfq-build.git -b ogg_universe -m default.xml
+                repo sync
+                repo forall -c &quot;git checkout master&quot;
+                repo forall -c &quot;git pull&quot;
+                &quot;&quot;&quot;
+                script {
+                    if (&quot;${buildModule}&quot; != &quot;all&quot;) {
+                        checkoutBranch()
+                    }
+                }
+
+                //input &apos;Do you want to continue the Build?&apos;
+            }
+        }
+
+        stage(&apos;Build all Modules&apos;) {
+            when {
+                expression { buildModule == &apos;all&apos; }
+            }
+            steps {
+                sh &quot;&quot;&quot;#!/bin/bash
+                set -e
+                echo &quot;Building all LM Modules from &apos;master&apos; branch....&quot;
+                mvn --version
+
+                echo &quot;BUILDING &apos;mvn clean deploy&apos;&quot;
+                #mvn clean deploy -DskipTests -U -s /var/lib/jenkins/.m2/settings.xml
+                touch ${SOURCE_DIR}/noarch/XE-dt-0.47_SNAPSHOT${timeStamp}.noarch.rpm
+                touch ${SOURCE_DIR}/noarch/FG-dt-0.47_SNAPSHOT${timeStamp}.noarch.rpm
+                touch ${SOURCE_DIR}/noarch/FM-dt-0.47_SNAPSHOT${timeStamp}.noarch.rpm
+                &quot;&quot;&quot;
+            }
+        }
+
+        stage(&apos;Build subModule&apos;) {
+            when {
+                expression { buildModule != &apos;all&apos; }
+            }
+            steps {
+                sh &quot;&quot;&quot;#!/bin/bash
+                set -e
+                echo &quot;Building LM ${subModule}....&quot;
+                mvn --version
+
+                echo &quot;BUILDING &apos;mvn clean deploy&apos; for ${app}&quot;
+                #mvn clean deploy -pl ${subModule} -DskipTests -U -s ~/.m2/settings.xml --also-make
+                touch ${SOURCE_DIR}/noarch/${app}-dt-0.47_SNAPSHOT${timeStamp}.noarch.rpm
+                &quot;&quot;&quot;
+            }
+        }
+
+        stage(&apos;Publish&apos;) {
+            steps {
+                echo &quot;Publishing to ${rpm}..&quot;
+
+                script{
+                    //def repo = [&apos;s3cmd&apos;, &apos;createrepo&apos;]
+                    def repo = [&apos;s3cmd&apos;]
+                    for (int i = 0; i &lt; repo.size(); ++i) {
+                        echo &quot;Testing the ${repo[i]} repo&quot;
+                        check = sh(script:&quot;which ${repo[i]}&quot;, returnStdout:true).trim()
+                        echo check
+                    }
+
+                    if (!fileExists(&quot;${SOURCE_DIR}&quot;)) {
+                        println(&quot;ERROR: ${SOURCE_DIR} does not exists&quot;)
+                        sh &apos;exit 1&apos;;
+                    }
+                    if (!fileExists(&quot;${TARGET_DIR}&quot;)) {
+                        sh &quot;mkdir -pv ${TARGET_DIR}&quot;
+                    }
+                    if (!fileExists(&quot;${PKG_DIR}&quot;)) {
+                        sh &quot;mkdir -pv ${PKG_DIR}&quot;
+                    }
+                    if (!TARGET_BUCKET?.trim()) {
+                        println(TARGET_BUCKET + &quot; is null or empty.&quot;)
+                    }
+
+                }
+                /*
+                sh &quot;&quot;&quot;#!/bin/bash
+                set -e
+                if [ -z &quot;${TARGET_BUCKET}&quot; ]; then
+                    echo &quot;ERROR: Target bucket must be specified.&quot;
+                    exit 1
+                fi
+                &quot;&quot;&quot; */
+
+                publishPackage()
+                gitTagVersion()
+                sh &quot;rm -rf ${SOURCE_DIR}/noarch/*&quot;
+            }
+        }
+    }
+}
+</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

@@ -1,0 +1,97 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.41">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.3.9"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.3.9">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.plugins.buildblocker.BuildBlockerProperty plugin="build-blocker-plugin@1.7.3">
+      <useBuildBlocker>false</useBuildBlocker>
+      <blockLevel>GLOBAL</blockLevel>
+      <scanQueueFor>DISABLED</scanQueueFor>
+      <blockingJobs></blockingJobs>
+    </hudson.plugins.buildblocker.BuildBlockerProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>PARAMETER_01</name>
+          <description></description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>ONE</string>
+              <string>TWO</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>BOOLEAN</name>
+          <description></description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.TextParameterDefinition>
+          <name>MULTI-LINE-STRING</name>
+          <description></description>
+          <defaultValue>
+                                this is a multi-line 
+                                string parameter example
+                                </defaultValue>
+          <trim>false</trim>
+        </hudson.model.TextParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>STRING-PARAMETER</name>
+          <description></description>
+          <defaultValue>scriptcrunch</defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.74">
+    <script>pipeline {
+    agent any
+    stages {
+        stage(&apos;Setup parameters&apos;) {
+            steps {
+                script { 
+                    properties([
+                        parameters([
+                            choice(
+                                choices: [&apos;ONE&apos;, &apos;TWO&apos;], 
+                                name: &apos;PARAMETER_01&apos;
+                            ),
+                            booleanParam(
+                                defaultValue: true, 
+                                description: &apos;&apos;, 
+                                name: &apos;BOOLEAN&apos;
+                            ),
+                            text(
+                                defaultValue: &apos;&apos;&apos;
+                                this is a multi-line 
+                                string parameter example
+                                &apos;&apos;&apos;, 
+                                 name: &apos;MULTI-LINE-STRING&apos;
+                            ),
+                            string(
+                                defaultValue: &apos;scriptcrunch&apos;, 
+                                name: &apos;STRING-PARAMETER&apos;, 
+                                trim: true
+                            )
+                        ])
+                    ])
+                }
+            }
+        }
+    }   
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

@@ -1,0 +1,35 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.plugins.jira.JiraProjectProperty plugin="jira@3.0.10"/>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+#source ~/.bash_profile
+echo &quot;which repo :&lt;&lt;`which repo`&gt;&gt;&quot;
+echo &quot;repo version: `repo --version`&quot;
+echo &quot;which gradle :&lt;&lt;`which gradle`&gt;&gt;&quot;
+echo &quot;repo version: `gradle --version`&quot;
+echo &quot;hostname: `hostname`&quot;
+echo &quot;pwd: `pwd`&quot;
+echo &quot;whoami: `whoami`&quot;
+echo &quot;PATH: $PATH&quot;
+#cat ~/.bash_profile
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>
