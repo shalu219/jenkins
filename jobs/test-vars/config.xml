@@ -22,9 +22,12 @@
       <parameterDefinitions>
         <hudson.model.ChoiceParameterDefinition>
           <name>PARAMETER_01</name>
-          <choices>
-            <string>ONE</string>
-            <string>TWO</string>
+          <description></description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>ONE</string>
+              <string>TWO</string>
+            </a>
           </choices>
         </hudson.model.ChoiceParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
@@ -34,6 +37,7 @@
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.TextParameterDefinition>
           <name>MULTI-LINE-STRING</name>
+          <description></description>
           <defaultValue>
                                 this is a multi-line 
                                 string parameter example
@@ -42,6 +46,7 @@
         </hudson.model.TextParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>STRING-PARAMETER</name>
+          <description></description>
           <defaultValue>scriptcrunch</defaultValue>
           <trim>true</trim>
         </hudson.model.StringParameterDefinition>
