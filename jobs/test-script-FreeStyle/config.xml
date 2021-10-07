@@ -19,7 +19,7 @@
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.GroovyScript">
             <secureScript plugin="script-security@1.78">
-              <script>return [&quot;select&quot;,&quot;IT&quot;,&quot;UAT&quot;,&quot;PROD&quot;]</script>
+              <script>return [&quot;select&quot;,&quot;IT&quot;,&quot;QA&quot;,&quot;UAT&quot;,&quot;PROD&quot;]</script>
               <sandbox>false</sandbox>
             </secureScript>
             <secureFallbackScript plugin="script-security@1.78">
@@ -43,6 +43,7 @@
               <script>import static groovy.io.FileType.FILES
 
 def itList  = &quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;
+def uatList  = &quot;/Users/shalu/rpm/liquimatch-qa-repo/noarch&quot;
 def uatList  = &quot;/Users/shalu/rpm/liquimatch-uat-repo/noarch&quot;
 def prodList  = &quot;/Users/shalu/rpm/liquimatch-prod-repo/noarch&quot;
 List default_item = [&quot;None&quot;]
@@ -50,6 +51,8 @@ def rootPath = &quot;&quot;
 
 if (Environment.equals(&quot;IT&quot;)){
   rootPath = itList
+} else if (Environment.equals(&quot;QA&quot;)){
+  rootPath = qaList
 } else if (Environment.equals(&quot;UAT&quot;)){
   rootPath = uatList
 } else if (Environment.equals(&quot;PROD&quot;)){
