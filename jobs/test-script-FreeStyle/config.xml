@@ -43,7 +43,7 @@
               <script>import static groovy.io.FileType.FILES
 
 def itList  = &quot;/Users/shalu/rpm/liquimatch-it-repo/noarch&quot;
-def uatList  = &quot;/Users/shalu/rpm/liquimatch-qa-repo/noarch&quot;
+def qaList  = &quot;/Users/shalu/rpm/liquimatch-qa-repo/noarch&quot;
 def uatList  = &quot;/Users/shalu/rpm/liquimatch-uat-repo/noarch&quot;
 def prodList  = &quot;/Users/shalu/rpm/liquimatch-prod-repo/noarch&quot;
 List default_item = [&quot;None&quot;]
