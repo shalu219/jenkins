@@ -27,8 +27,7 @@
       <parameterDefinitions>
         <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.5.6">
           <name>EnvironmentAction</name>
-          <description></description>
-          <randomName>choice-parameter-456686329884180</randomName>
+          <randomName>choice-parameter-703028240879816</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.GroovyScript">
             <secureScript plugin="script-security@1.78">
@@ -42,43 +41,40 @@ return [
 ]
         </script>
               <sandbox>false</sandbox>
+              <classpath/>
             </secureScript>
             <secureFallbackScript plugin="script-security@1.78">
               <script>return[&apos;error&apos;]</script>
               <sandbox>false</sandbox>
+              <classpath/>
             </secureFallbackScript>
           </script>
-          <projectName>test-LMdeploy-pipeline</projectName>
-          <projectFullName>test-LMdeploy-pipeline</projectFullName>
           <choiceType>PT_SINGLE_SELECT</choiceType>
-          <filterable>false</filterable>
-          <filterLength>1</filterLength>
         </org.biouno.unochoice.ChoiceParameter>
         <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.5.6">
           <name>deployModule</name>
           <description></description>
-          <randomName>choice-parameter-456686330052641</randomName>
+          <randomName>choice-parameter-703028241836546</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.GroovyScript">
             <secureScript plugin="script-security@1.78">
               <script>return[&apos;all&apos;,&apos;XE:crossingengine&apos;,&apos;PS:persistenceserver&apos;,&apos;SDS:staticdataserver&apos;,&apos;FG:fixgateway&apos;,&apos;CE:creditengine&apos;,&apos;FH:mktdatafeedhandler&apos;,&apos;TDB:tradedbwriter&apos;,&apos;TN:tradenotification&apos;,&apos;RG:rest_gateway&apos;,&apos;FM:fixmultiplexer&apos;]</script>
               <sandbox>false</sandbox>
+              <classpath/>
             </secureScript>
             <secureFallbackScript plugin="script-security@1.78">
               <script>return[&apos;error&apos;]</script>
               <sandbox>false</sandbox>
+              <classpath/>
             </secureFallbackScript>
           </script>
-          <projectName>test-LMdeploy-pipeline</projectName>
-          <projectFullName>test-LMdeploy-pipeline</projectFullName>
           <choiceType>PT_SINGLE_SELECT</choiceType>
           <filterable>true</filterable>
           <filterLength>1</filterLength>
         </org.biouno.unochoice.ChoiceParameter>
         <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.5.6">
           <name>version</name>
-          <description></description>
-          <randomName>choice-parameter-456686330217881</randomName>
+          <randomName>choice-parameter-703028243534639</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.GroovyScript">
             <secureScript plugin="script-security@1.78">
@@ -111,25 +107,21 @@ def dir = new File(rootPath);
 def files = [];
 dir.eachFileRecurse(FILES) {
   if(it.name.endsWith(&apos;.noarch.rpm&apos;)) {
-    //files &lt;&lt; it.getName()
-    files &lt;&lt; it
+    files &lt;&lt; it.getName()
   }
 }
-def result = files.sort{ a,b -&gt; b.lastModified() &lt;=&gt; a.lastModified() }*.name
-
 //return files.reverse();
-//return files
-return result
+return files
         </script>
               <sandbox>false</sandbox>
+              <classpath/>
             </secureScript>
             <secureFallbackScript plugin="script-security@1.78">
               <script>return[&apos;error&apos;]</script>
               <sandbox>false</sandbox>
+              <classpath/>
             </secureFallbackScript>
           </script>
-          <projectName>test-LMdeploy-pipeline</projectName>
-          <projectFullName>test-LMdeploy-pipeline</projectFullName>
           <parameters class="linked-hash-map"/>
           <referencedParameters>EnvironmentAction</referencedParameters>
           <choiceType>PT_SINGLE_SELECT</choiceType>
@@ -138,24 +130,21 @@ return result
         </org.biouno.unochoice.CascadeChoiceParameter>
         <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.5.6">
           <name>rollback</name>
-          <description></description>
-          <randomName>choice-parameter-456686330370447</randomName>
+          <randomName>choice-parameter-703028244148593</randomName>
           <visibleItemCount>1</visibleItemCount>
           <script class="org.biouno.unochoice.model.GroovyScript">
             <secureScript plugin="script-security@1.78">
               <script>return[&apos;no&apos;,&apos;yes&apos;]</script>
               <sandbox>false</sandbox>
+              <classpath/>
             </secureScript>
             <secureFallbackScript plugin="script-security@1.78">
               <script>return[&apos;error&apos;]</script>
               <sandbox>false</sandbox>
+              <classpath/>
             </secureFallbackScript>
           </script>
-          <projectName>test-LMdeploy-pipeline</projectName>
-          <projectFullName>test-LMdeploy-pipeline</projectFullName>
           <choiceType>PT_SINGLE_SELECT</choiceType>
-          <filterable>false</filterable>
-          <filterLength>1</filterLength>
         </org.biouno.unochoice.ChoiceParameter>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
