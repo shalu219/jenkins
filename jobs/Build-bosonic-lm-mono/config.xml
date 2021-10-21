@@ -1,7 +1,184 @@
 <?xml version='1.1' encoding='UTF-8'?>
 <flow-definition plugin="workflow-job@2.41">
+  <description></description>
   <keepDependencies>false</keepDependencies>
-  <properties/>
+  <properties>
+    <hudson.plugins.buildblocker.BuildBlockerProperty plugin="build-blocker-plugin@1.7.3">
+      <useBuildBlocker>false</useBuildBlocker>
+      <blockLevel>GLOBAL</blockLevel>
+      <scanQueueFor>DISABLED</scanQueueFor>
+      <blockingJobs></blockingJobs>
+    </hudson.plugins.buildblocker.BuildBlockerProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.74">
+    <script>/*
+Created on Sep 1, 2021
+@author: shalusrivastava
+*/
+
+def rpm = &quot;development&quot;
+def otcxn_dir = &quot;~/.m2/repository/com/otcxn&quot;
+def publishPackage() {
+    sh &quot;cp -rv $SOURCE_DIR $TARGET_DIR&quot;
+    def UPDATE = &quot;&quot;
+    if (fileExists(&quot;$TARGET_DIR/noarch/repodata/repomd.xml&quot;)) {
+        UPDATE = &quot;--update&quot;
+    }
+    sh &quot;createrepo --cachedir=$CACHE_DIR --workers 4 -v $UPDATE --deltas $TARGET_DIR/ --max-delta-rpm-size 399999999&quot;
+}
+def gitTagVersion() {
+    script {
+        if (&quot;${buildModule}&quot; != &quot;all&quot;) {
+            VERSION = sh(script:&quot;ls -t ${TARGET_DIR}/noarch/${app}* | head -n1 | cut -d&apos;/&apos; -f5 | cut -d&apos;-&apos; -f3&quot;, returnStdout:true).trim()
+        } else {
+            VERSION = sh(script:&quot;ls -t ${TARGET_DIR}/noarch | head -n1 | cut -d&apos;-&apos; -f3&quot;, returnStdout:true).trim()
+            //sh &quot;touch ${TARGET_DIR}/noarch/all-dt-${VERSION}&quot;
+        }
+        println(&quot;PACKAGE VERSION: &quot; + VERSION)
+        sh &quot;echo ${VERSION} &gt;&gt; ${PKG_DIR}/version.info&quot;
+        sh &quot;touch $ROLLBACK_DIR/$VERSION&quot;
+    }
+
+    echo &quot;tag version&quot;
+    script {
+        if (&quot;${buildModule}&quot; != &quot;all&quot;) {
+            verNum=&quot;subModule_${app}_${BUILD_NUMBER}_${timeStamp}&quot;
+        } else {
+            verNum=&quot;OggUniverse_${BUILD_NUMBER}_${timeStamp}&quot;
+        }
+    }
+    println(&quot;TAG VERSION: &quot; + verNum)
+    sh &quot;&quot;&quot;#!/bin/bash
+    set -e
+    cd ${WORKSPACE}/build
+    git tag ${verNum}
+    git push origin ${verNum}
+
+    mkdir -p ${TARGET_DIR}/tags
+    touch ${TARGET_DIR}/tags/${verNum}
+    &quot;&quot;&quot;
+}
+
+pipeline {
+    /*A declarative pipeline*/
+
+    agent any
+    parameters {
+        string(name: &apos;fromBranch&apos;, defaultValue: &apos;RPM-package-structure&apos;, description: &apos;(Please do not put &quot;origin&quot; with branch name.)&apos;)
+    }
+
+    environment {
+        SOURCE_DIR=&quot;**/**/rpm/**/RPMS/*&quot;
+        TARGET_BUCKET=&quot;liquimatch-${rpm}-repo&quot;
+        TARGET_DIR = &quot;/rpm/${TARGET_BUCKET}&quot;
+        CACHE_DIR=&quot;${TARGET_DIR}/dev-cache&quot;
+        PKG_DIR=&quot;${TARGET_DIR}/pkg-info&quot;
+        ROLLBACK_DIR=&quot;/rpm/rollback/it/ogguniverse&quot;
+    }
+
+    stages {
+        stage(&apos;Verify inputs&apos;) {
+            steps {
+                script {
+                    if (&quot;${fromBranch}&quot;.isEmpty()) {
+                        println(&quot;ERROR: Parameters can not be empty.&quot;)
+                        println(&quot;Branch Passed:&lt;&lt;${fromBranch}&gt;&gt;&quot;)
+                        sh &apos;exit 1&apos;
+                    }
+                }
+            }
+        }
+/*
+        stage(&apos;Initialize the variables&apos;) {
+            steps {
+                script {
+                    timeStamp = sh(script:&quot;TZ=\&quot;:America/Los_Angeles\&quot; date +\&quot;%Y%m%d\&quot;&quot;, returnStdout:true).trim()
+                }
+            }            
+        }
+*/
+        stage(&apos;Checkout branch&apos;) {
+            steps {
+                sh &quot;&quot;&quot;#!/bin/bash
+                set -e
+                if [ -d ${otcxn_dir} ]; then 
+                    rm -rf ${otcxn_dir};
+                    echo &quot;BT libs removed from &lt;&lt;${otcxn_dir}&gt;&gt;&quot;
+                fi
+                &quot;&quot;&quot;
+                script {
+                    status = sh(returnStatus: true, script: &quot;git branch: \&quot;${fromBranch}\&quot;, url: &apos;https://github.com/otcxn/bosonic-lm.git&apos;&quot;)
+                    if (status != 0) {
+                        println(&quot;git repo Failed&quot;)
+                        sh &apos;exit 1&apos;
+                    }
+                }
+            }
+        }
+
+        stage(&apos;Build BOSONIC LM&apos;) {
+            steps {
+                script {
+                    println(&quot;Building BOSONIC LM from ${fromBranch} branch....&quot;)
+                    //sh &quot;mvn --version&quot;
+                    println(&quot;RUNNING &apos;mvn clean deploy&apos;&quot;)
+                    sh &quot;mvn install -DskipTests -U&quot;
+                    println(&quot;Creating dependent modules in shared-libs&quot;)
+                    sh &quot;mvn dependency:copy-dependencies -DoutputDirectory=\&quot;${PWD}/shared-libs\&quot;&quot;
+                }
+            }
+        }
+
+        stage(&apos;Create RPM package&apos;) {
+            steps {
+                script {
+                    status = sh(returnStatus: true, script: &quot;git branch: \&quot;rpm-DEVOPS-167\&quot;, url: &apos;https://github.com/otcxn/devops-tools.git&apos;&quot;)
+                    if (status != 0) {
+                        println(&quot;git repo Failed&quot;)
+                        sh &apos;exit 1&apos;
+                    }
+                }
+                sh &quot;./rpm/build_bosonic-lm.sh&quot;
+            }
+        }
+/*
+        stage(&apos;Publish&apos;) {
+            steps {
+                echo &quot;Publishing..&quot;
+
+                script{
+                    def repo = [&apos;s3cmd&apos;, &apos;createrepo&apos;]
+                    for (int i = 0; i &lt; repo.size(); ++i) {
+                        echo &quot;Testing the ${repo[i]} repo&quot;
+                        check = sh(script:&quot;which ${repo[i]}&quot;, returnStdout:true).trim()
+                        echo check
+                    }
+
+                    if (&quot;${SOURCE_DIR}&quot;.isEmpty()) {
+                        println(&quot;Source directory must be specified.&quot;)
+                        sh &apos;exit 1&apos;;
+                    }
+                    if (!fileExists(&quot;${TARGET_DIR}&quot;)) {
+                        sh &quot;mkdir -pv ${TARGET_DIR}&quot;
+                    }
+                    if (!fileExists(&quot;${PKG_DIR}&quot;)) {
+                        sh &quot;mkdir -pv ${PKG_DIR}&quot;
+                    }
+                    if (&quot;${TARGET_BUCKET}&quot;.isEmpty()) {
+                        println(&quot;ERROR: Target bucket must be specified.&quot;)
+                        sh &apos;exit 1&apos;
+                    }
+                }
+
+                //publishPackage()
+                //gitTagVersion()
+            }
+        }  */
+    }
+}
+</script>
+    <sandbox>true</sandbox>
+  </definition>
   <triggers/>
   <disabled>false</disabled>
 </flow-definition>
