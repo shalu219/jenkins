@@ -78,6 +78,7 @@
       <properties class="hudson.model.View$PropertyList"/>
       <jobNames>
         <comparator class="hudson.util.CaseInsensitiveComparator" reference="../../../listView/jobNames/comparator"/>
+        <string>Build-bosonic-lm-mono</string>
         <string>test-LMbuild-pipeline</string>
         <string>test-LMdeploy-pipeline</string>
         <string>test-vars</string>
