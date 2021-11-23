@@ -1,0 +1,31 @@
+// localhost:8080
+/*
+Created on Sep 1, 2021
+@author: shalusrivastava
+*/
+
+def versionInfo(thestage){ 
+    stage(thestage) {    
+    	println("RELEASE VERSION: " + thestage)
+    }
+}
+
+pipeline {
+    /*A declarative pipeline*/
+
+    agent any
+    parameters {
+        string(name: 'version', defaultValue: '1.1.1', description: '')
+    }
+
+    stages {
+        stage('Release') {
+            steps {
+            	script {
+            		def stage="Released:${version}"
+            		versionInfo(stage)	// Dynamic Stage Name
+            	}
+            }
+        }
+    }
+}
