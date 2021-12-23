@@ -1,0 +1,106 @@
+/*
+Created on Oct 11, 2021
+@author: shalusrivastava
+*/
+
+properties([
+    parameters([
+        choice(choices: ['IT', 'QA', 'UAT', 'UAT2', 'PROD'], description: '', name: 'environment')
+    ]), 
+    pipelineTriggers([parameterizedCron('''TZ=America/New_York
+#@midnight
+H 11 * * * % environment=IT''')])
+])
+
+def setDescription() { 
+    def item = Jenkins.instance.getItemByFullName(env.JOB_NAME) 
+    item.setDescription("everyday, New_York @ 11 AM for IT") 
+    item.save()
+}
+
+def restartOnServer() {
+    setDescription()
+	script {
+		status = sh(returnStatus: true, script: "sudo ansible-playbook -u ${user} ${ansibleDir}/playbook/liquimatchDeploy.yml --tags \"restart\" --extra-vars \"host=${host} user=${user}\"")
+	}
+}
+pipeline {
+	agent any
+
+	environment {
+        user="centos"
+        ansibleDir="/etc/ansible"
+    }
+
+    stages {
+        stage('Restart IT') {
+            when {
+                expression { environment == 'IT' }
+            }
+            steps {
+                script {
+                    host="host" + environment
+                }
+                restartOnServer()
+            }
+            
+        }
+        stage('Restart QA') {
+            when {
+                expression { environment == 'QA' }
+            }
+            steps {
+                script {
+                    host="host" + environment
+                }
+                restartOnServer()
+            }
+            
+        }
+        stage('Restart UAT') {
+            when {
+                expression { environment == 'UAT' }
+            }
+            steps {
+                script {
+                    user="otcxn"
+                    host="OTCXN-" + environment
+                }
+                restartOnServer()
+            }
+            
+        }
+        stage('Restart UAT2') {
+            when {
+                expression { environment == 'UAT2' }
+            }
+            steps {
+                script {
+                    user="bosonic"
+                    host=environment
+                }
+                restartOnServer()
+            }
+            
+        }
+        stage('Restart PROD') {
+            when {
+                expression { environment == 'PROD' }
+            }
+            steps {
+                script {
+                	timeout(3) {    // timeout after 3 mins
+                        script {
+                            input(message: 'You have selected PROD. Do you want to continue?', ok: 'Proceed')
+                        }
+                    }
+                    user="otcxn"
+                    host="LD4-OTCXN-" + environment
+                }
+                restartOnServer()
+            }
+            
+        }
+    }
+
+}

@@ -1,0 +1,212 @@
+/*
+Created on Dec 15, 2021
+@author: shalusrivastava
+*/
+
+properties([
+  parameters([
+    [
+      $class: 'ChoiceParameter',
+      choiceType: 'PT_SINGLE_SELECT',
+      name: 'server',
+      script: [$class: 'GroovyScript', 
+        fallbackScript: [classpath: [], sandbox: false, script: "return['error']"], 
+        script: [classpath: [], sandbox: false, script: "return['IT','QA','UAT','UAT2','PROD']"]]
+    ],
+    string(name: 'VERSION', defaultValue: 'dt-0.47-SNAPSHOT', description: '', trim: true)
+ ])
+])
+
+def createSymlinkForConfig() {
+    script {
+        // Copy script to the target server
+        git branch: "master", url: 'https://github.com/otcxn/devops-tools.git'
+        sshPublisher(
+        continueOnError: false, failOnError: true,
+        publishers: [
+            sshPublisherDesc(
+                configName: "${SSH_CONFIG_NAME}",
+                verbose: true,
+                transfers: [
+                sshTransfer(
+                execCommand: "mkdir -pv ${scriptDir}"
+                ),
+                sshTransfer(
+                sourceFiles: "common/scripts/config_softlinks.sh",
+                removePrefix: "common/scripts",
+                remoteDirectory: "/${scriptDir}",
+                execCommand: "sudo chmod +x ${scriptDir}/config_softlinks.sh && sudo ${scriptDir}/config_softlinks.sh ${VERSION}"
+                ),
+                sshTransfer(
+                execCommand: "sudo chown -R ${user}:${user} ${configDir}"
+                )
+            ])
+        ])
+    }
+}
+def deployConfigITandQA() {
+    script {
+        sshPublisher(
+        continueOnError: false, failOnError: true,
+        publishers: [
+            sshPublisherDesc(
+                configName: "${SSH_CONFIG_NAME}",
+                verbose: true,
+                transfers: [
+                sshTransfer(
+                execCommand: "sudo chown -R ${user}:${user} ${configDir}"
+                ),
+                sshTransfer(
+                sourceFiles: "${env}/conf/shared/",
+                removePrefix: "${env}/conf/",
+                remoteDirectory: "deployments/instance"
+                ),
+                sshTransfer(
+                sourceFiles: "${env}/conf/**/**/${VERSION}/config/",
+                removePrefix: "${env}/conf/",
+                remoteDirectory: "deployments/instance",
+                execCommand: "sudo /opt/otcxn_dt/tools/bootstrap/bootstrap.py for-all upgrade -v ${VERSION} -n -f"
+                )
+            ])
+        ])
+        createSymlinkForConfig()
+    }
+}
+def deployConfigUATandPROD() {
+    script {
+        DATE = sh(script:"TZ=\":America/Los_Angeles\" date +\"%Y-%m-%d\"", returnStdout:true).trim()
+        CFG_FILENAME="configs_${DATE}.zip"
+
+        sshPublisher(
+        continueOnError: false, failOnError: true,
+        publishers: [
+            sshPublisherDesc(
+                configName: "${SSH_CONFIG_NAME}",
+                verbose: true,
+                transfers: [
+                sshTransfer(
+                execCommand: "mkdir -pv ${backupDir}"
+                ),
+                sshTransfer(
+                execCommand: "sudo tar -cvf ${backupDir}/${CFG_FILENAME} ${configDir}"
+                ),
+                /* For clean config deploy - you can delete directory prior to copy
+                sshTransfer(
+                execCommand: "sudo rm ${configDir}"
+                ), */
+                sshTransfer(
+                execCommand: "sudo chown -R ${user}:${user} ${configDir}"
+                ),
+                sshTransfer(
+                sourceFiles: "${env}/${conf}/shared/",
+                removePrefix: "${env}/${conf}/",
+                remoteDirectory: "deployments/instance"
+                ),
+                sshTransfer(
+                sourceFiles: "${env}/${conf}/**/**/${VERSION}/config/",
+                removePrefix: "${env}/${conf}/",
+                remoteDirectory: "deployments/instance"
+                )
+            ])
+        ])
+        createSymlinkForConfig()
+    }
+}
+
+pipeline {
+    /*A declarative pipeline*/
+
+    agent any
+    environment {
+        backupDir="/opt/otcxn_dt/backup"
+        scriptDir="/home/otcxn/deploy"
+        // "scriptDir" is different for UAT2. Check the stage.
+        configDir="/opt/otcxn_dt/deployments/instance"
+    }
+
+    stages {
+        stage('Checkout SCM') {
+            steps {
+                println("Workspace Cleanup")
+                cleanWs()
+                git branch: "master", url: 'https://github.com/otcxn/ogg_darktraderconfig.git'
+                sh "mvn clean install -U"
+            }
+        }
+        stage('Deploy IT') {
+            when {
+                expression { server == 'IT' }
+            }
+            steps {
+                script {
+                    env="dev"
+                    SSH_CONFIG_NAME="DO-LM-" + server
+                    user="centos"
+                }
+                deployConfigITandQA()
+            }
+        }
+        stage('Deploy QA') {
+            when {
+                expression { server == 'QA' }
+            }
+            steps {
+                script {
+                    env = server.toLowerCase()
+                    SSH_CONFIG_NAME="DO-LM-" + server
+                    user="centos"
+                }
+                deployConfigITandQA()
+            }
+        }
+        stage('Deploy UAT') {
+            when {
+                expression { server == 'UAT' }
+            }
+            steps {
+                script {
+                    env = server.toLowerCase()
+                    conf="conf"
+                    SSH_CONFIG_NAME="LC-OTCXN-" + server
+                    user="otcxn"
+                }
+                deployConfigUATandPROD()
+            }
+         }    
+         stage('Deploy UAT2') {
+            when {
+                expression { server == 'UAT2' }
+            }
+            steps {
+                script {
+                    env="uat"
+                    conf="conf"
+                    SSH_CONFIG_NAME=server
+                    user="bosonic"
+                    scriptDir="/home/bosonic/deploy"
+                }
+                deployConfigUATandPROD()
+            }
+        }
+        
+        stage('Deploy PROD') {
+            when {
+                expression { server == 'PROD' }
+            }
+            steps {
+                script {
+                    timeout(3) {    // timeout after 3 mins
+                        script {
+                            input(message: 'You have selected PROD. Do you want to continue?', ok: 'Proceed')
+                        }
+                    }
+                    env = server.toLowerCase()
+                    conf="conf_ld4"
+                    SSH_CONFIG_NAME="LD4-OTCXN-" + server
+                    user="otcxn"
+                }
+                deployConfigUATandPROD()
+            }
+        }
+    }
+}

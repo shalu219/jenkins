@@ -1,0 +1,147 @@
+/*
+Created on Dec 1, 2021
+@author: shalusrivastava
+Description: Creates symlinks for modules to the specified version
+*/
+
+properties([
+  parameters([
+    [
+      $class: 'ChoiceParameter',
+      choiceType: 'PT_SINGLE_SELECT',
+      name: 'server',
+      script: [$class: 'GroovyScript', 
+        fallbackScript: [classpath: [], sandbox: false, script: "return['error']"], 
+        script: [classpath: [], sandbox: false, script: "return['IT','QA','UAT','UAT2','PROD']"]]
+    ],
+    [
+      $class: 'ChoiceParameter', 
+      choiceType: 'PT_MULTI_SELECT', 
+      description: '', 
+      filterLength: 1, 
+      filterable: true, 
+      name: 'module', 
+      script: [
+        $class: 'GroovyScript', 
+        fallbackScript: [classpath: [], sandbox: false, script: "return['error']"], 
+        script: [classpath: [], sandbox: false, 
+          script: "return['all','as','ce','fg','fh','fm','ps','rg','sds','tdb','tn','xe']"]]
+      ],
+    string(name: 'version', defaultValue: '2021.1.1', description: '', trim: true)
+  ])
+])
+
+def installOnServer() {
+    script {
+        println("Workspace Cleanup")
+        cleanWs()
+
+        git branch: "master", url: 'https://github.com/otcxn/devops-tools.git'
+        dir("${ansibleDir}") {
+            //sh "pwd"
+            status = sh(returnStatus: true, script: "sudo ansible-playbook -u ${user} ${ansibleDir}/playbook/liquimatchDeploy.yml --tags \"symlink-install\" --extra-vars \"host=${host} user=${user} packagePath=${packagePath} devopsPath=${devopsPath} mvn_version=${version} symlink_module=${module}\"")
+            if (status != 0) {
+                println("Deploy Failed")
+                sh 'exit 1'
+            }
+        }
+    }
+}
+
+pipeline {
+    /*A declarative pipeline*/
+
+    agent any
+    environment {
+        user="centos"
+        packagePath="/opt/bosonic/lm-package"
+        ansibleDir="/etc/ansible"
+        devopsPath="${WORKSPACE}"
+    }
+
+    stages {
+        stage('PROD Confirmation') {
+            when {
+                expression { server == 'PROD' }
+            }
+            steps {
+                script {
+                    if ( server == "PROD") {
+                        timeout(3) {    // timeout after 3 mins
+                            script {
+                                input(message: 'You have selected PROD. Do you want to continue?', ok: 'Proceed')
+                            }
+                        }
+                    }
+                }
+            }
+            
+        }
+
+        stage('Install on IT') {
+            when {
+                expression { server == 'IT' }
+            }
+            steps {
+                script {
+                    host="host" + server
+                    rpm="development"
+                }
+                installOnServer()
+            }
+            
+        }
+        stage('Install on QA') {
+            when {
+                expression { server == 'QA' }
+            }
+            steps {
+                script {
+                    host="host" + server
+                }
+                installOnServer()
+            }
+            
+        }
+        stage('Install on UAT') {
+            when {
+                expression { server == 'UAT' }
+            }
+            steps {
+                script {
+                    user="otcxn"
+                    host="OTCXN-" + server
+                }
+                installOnServer()
+            }
+            
+        }
+        stage('Install on UAT2') {
+            when {
+                expression { server == 'UAT2' }
+            }
+            steps {
+                script {
+                    user="bosonic"
+                    host=server
+                }
+                installOnServer()
+            }
+            
+        }
+ 
+        stage('Install on PROD') {
+            when {
+                expression { server == 'PROD' }
+            }
+            steps {
+                script {
+                    user="otcxn"
+                    host="LD4-OTCXN-" + server
+                }
+                installOnServer()
+            }
+            
+        }
+    }
+}

@@ -1,0 +1,167 @@
+/*
+Created on Nov 10, 2021
+@author: shalusrivastava
+*/
+
+properties([
+  parameters([
+    [
+      $class: 'ChoiceParameter',
+      choiceType: 'PT_SINGLE_SELECT',
+      name: 'server',
+      script: [$class: 'GroovyScript', 
+        fallbackScript: [classpath: [], sandbox: false, script: 'return[\'error\']'], 
+        script: [classpath: [], sandbox: false, script: "return['IT','QA','UAT','UAT2','PROD']"]]
+    ],
+    [
+      $class: 'ChoiceParameter',
+      choiceType: 'PT_SINGLE_SELECT',
+      name: 'version',
+      filterLength: 2, 
+      filterable: true, 
+      script: [
+        $class: 'GroovyScript', 
+        fallbackScript: [classpath: [], sandbox: false, script: 'return[\'error\']'], 
+        script: [classpath: [], sandbox: false, 
+        script: """
+import static groovy.io.FileType.FILES
+def rootPath = "/rpm/bosonic-lm-repo/noarch"
+def dir = new File(rootPath);
+def files = [];
+dir.eachFileRecurse(FILES) {
+  if(it.name.endsWith('.noarch.rpm')) {
+    //files << it.getName()
+    files << it
+  }
+}
+def result = files.sort{ a,b -> b.lastModified() <=> a.lastModified() }*.name
+
+//return files.reverse();
+//return files
+return result
+        """]]
+    ]
+ ])
+])
+
+def deployOnServer() {
+    script {
+        println("Workspace Cleanup")
+        cleanWs()
+        // mvn_version = sh(script:"echo ${version} | cut -d '-' -f 4", returnStdout:true).trim()
+
+        git branch: "master", url: 'https://github.com/otcxn/devops-tools.git'
+        dir("${ansibleDir}") {
+            //sh "pwd"
+            status = sh(returnStatus: true, script: "sudo ansible-playbook -u ${user} ${ansibleDir}/playbook/liquimatchDeploy.yml --tags \"bosonic-lm\" --extra-vars \"host=${host} user=${user} packagePath=${packagePath} package=${version} devopsPath=${devopsPath}\"")
+            if (status != 0) {
+                println("Deploy Failed")
+                sh 'exit 1'
+            }
+        }
+    }
+}
+
+pipeline {
+    /*A declarative pipeline*/
+
+    agent any
+    environment {
+        user="centos"
+        packagePath="/opt/bosonic/lm-package"
+        ansibleDir="/etc/ansible"
+        devopsPath="${WORKSPACE}"
+    }
+
+    stages {
+        stage('PROD Confirmation') {
+            when {
+                expression { server == 'PROD' }
+            }
+            steps {
+                script {
+                    if ( server == "PROD") {
+                        timeout(3) {    // timeout after 3 mins
+                            script {
+                                input(message: 'You have selected PROD. Do you want to continue?', ok: 'Proceed')
+                            }
+                        }
+                    }
+                }
+            }
+            
+        }
+
+        stage('Deploy IT') {
+            when {
+                expression { server == 'IT' }
+            }
+            steps {
+                script {
+                    host="host" + server
+                    rpm="development"
+                }
+                deployOnServer()
+            }
+            
+        }
+        stage('Deploy QA') {
+            when {
+                expression { server == 'QA' }
+            }
+            steps {
+                script {
+                    host="host" + server
+                }
+                deployOnServer()
+            }
+            
+        }
+        stage('Deploy UAT') {
+            when {
+                expression { server == 'UAT' }
+            }
+            steps {
+                script {
+                    user="otcxn"
+                    host="OTCXN-" + server
+                }
+                deployOnServer()
+            }
+         }    
+         stage('Deploy UAT2') {
+            when {
+                expression { server == 'UAT2' }
+            }
+            steps {
+                script {
+                    user="bosonic"
+                    host=server
+                }
+                deployOnServer()
+            }
+            
+        }
+        
+        stage('Deploy PROD') {
+            when {
+                expression { server == 'PROD' }
+            }
+            steps {
+                script {
+                    user="otcxn"
+                    host="LD4-OTCXN-" + server
+                }
+                deployOnServer()
+            }
+            
+        }
+        stage('Installed Versions') {
+            steps {
+                script {
+                    sh "sudo ansible -u $user -a \"rpm -qa bosonic-lm* warn=False\" ${host}"
+                }
+            }
+        }
+    }
+}

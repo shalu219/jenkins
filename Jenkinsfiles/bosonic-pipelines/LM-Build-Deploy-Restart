@@ -3,36 +3,58 @@ Created on Sep 1, 2021
 @author: shalusrivastava
 */
 
+def setDescription() { 
+    def item = Jenkins.instance.getItemByFullName(env.JOB_NAME) 
+    item.setDescription("one-click job for LM IT. \n\nIt will:\n-release from 'master' branch \n-deploys latest rpm package \n-installs 'all' modules to latest Release Version \n-deploys latest config \n-restarts LM \n-runs test script 'login_test.js'") 
+    item.save()
+}
+
 pipeline {
     agent any
-
-    parameters {
-        string(defaultValue: "login_test.js", description: 'This is the parameter for JOB - Continuos Integration Bosonic', name: 'test_spec')
-    }
 
     stages {
         stage ("Build") {
             steps {
-                echo 'Building "LM-Build-Pipeline"....'
-                build 'LM-Build-Pipeline'
+                setDescription()
+                echo 'Building: "LM-Build-Pipeline"....'
+                build 'LM-Version'
+                script {
+                    //install_version = sh(script:"ls /rpm/rollback/it/bosonic-lm | head -1", returnStdout:true).trim()
+                    rpm_version = sh(script:"ls -t /rpm/bosonic-lm-repo/noarch | head -1", returnStdout:true).trim()
+                    release_version = sh(script:"echo ${rpm_version} | cut -d '-' -f4", returnStdout:true).trim()
+                }
+                println("RPM VERSION=" + rpm_version)
+                println("RELEASE VERSION=" + release_version)
             }
         }
         stage('Deploy') {
             steps {
-                echo 'Deploying "LM-Deploy-Pipeline"....'
-                build 'LM-Deploy-Pipeline'
+                echo 'Deploying on IT: "LM-Deploy-Pipeline"....'
+                build job: 'LM-Deploy', parameters: [string(name: 'version', value: String.valueOf(rpm_version))]
+            }
+        }
+        stage('Install') {
+            steps {
+                echo 'Install on IT: "LM-Install"....'
+                build job: 'LM-Install', parameters: [string(name: 'module', value: 'all'), string(name: 'version', value: String.valueOf(release_version))]
+            }
+        }
+        stage('Config') {
+            steps {
+                echo 'Deploy Config on IT: "LM-Config"..'
+                build 'LM-Config'
             }
         }
         stage('Restart') {
             steps {
-                echo 'Restarting "LM-RestartAllDev"..'
-                build 'LM-RestartAllDev'
+                echo 'Restarting IT: "LM-Restart"..'
+                build 'LM-Restart'
             }
         }
         stage('Test') {
             steps {
                 echo 'Testing with "Continuos Integration Bosonic"..'
-                build job: 'Continuos Integration Bosonic', parameters: [string(name: 'spec', value: String.valueOf(test_spec))]
+                build job: 'Continuos Integration Bosonic', parameters: [string(name: 'spec', value: 'login_test.js')]
             }
         }
     }

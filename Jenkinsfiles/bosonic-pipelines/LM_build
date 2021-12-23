@@ -3,57 +3,29 @@ Created on Sep 1, 2021
 @author: shalusrivastava
 */
 
-def rpm = "development"
-def otcxn_dir = "/var/lib/jenkins/.m2/repository/com/otcxn"
-def checkoutBranch() {
-    println("subModule is "+ app + ", and fromBranch is " + fromBranch)
-    script{
-        tagExist = sh(script:"git -C ./${subModule} branch -a | grep ${fromBranch} | tr -d \" \"", returnStdout:true).trim()
-        println("tagExist=" + tagExist)
-        if (!"${tagExist}".isEmpty()) {
-            sh "repo forall ${subModule} -c \"git checkout origin/${fromBranch}\""
-            println("Status after branch checkout")
-            sh "repo forall -c \"git status\""
-        } else {
-            println("ERROR: Branch ${fromBranch} does not exist in ${subModule}")
-            sh 'exit 1'
-        }
-    }
-}
+//def rpm = "development"
+def bosonic_dir = "/var/lib/jenkins/.m2/repository/com/bosonic"
 def publishPackage() {
     sh "cp -rv $SOURCE_DIR $TARGET_DIR"
     def UPDATE = ""
     if (fileExists("$TARGET_DIR/noarch/repodata/repomd.xml")) {
         UPDATE = "--update"
     }
-    echo "TEST OUTPUT:: <<${UPDATE}>><<${CACHE_DIR}>><<${SOURCE_DIR}>><<${TARGET_DIR}>>"
-    sh "createrepo --cachedir=$CACHE_DIR --workers 4 -v $UPDATE --deltas $TARGET_DIR/ --max-delta-rpm-size 399999999"
+    sh "createrepo --cachedir=$CACHE_DIR --workers 4 -v $UPDATE --deltas $TARGET_DIR/ --max-delta-rpm-size 6999999999"
 }
 def gitTagVersion() {
-    script {
-        if ("${buildModule}" != "all") {
-            VERSION = sh(script:"ls -t ${TARGET_DIR}/noarch/${app}* | head -n1 | cut -d'/' -f5 | cut -d'-' -f3", returnStdout:true).trim()
-        } else {
-            VERSION = sh(script:"ls -t ${TARGET_DIR}/noarch | head -n1 | cut -d'-' -f3", returnStdout:true).trim()
-            //sh "touch ${TARGET_DIR}/noarch/all-dt-${VERSION}"
-        }
-        println("PACKAGE VERSION: " + VERSION)
-        sh "echo ${VERSION} >> ${PKG_DIR}/version.info"
-        sh "touch $ROLLBACK_DIR/$VERSION"
-    }
+    /*script {
+        timeStamp = sh(script:"TZ=\":America/Los_Angeles\" date +\"%Y%m%d\"", returnStdout:true).trim()
+    }*/
+    //println("RELEASE VERSION: " + version)
+    sh "echo ${version} >> ${PKG_DIR}/version.info"
+    sh "touch $ROLLBACK_DIR/$version"
 
-    echo "tag version"
-    script {
-        if ("${buildModule}" != "all") {
-            verNum="subModule_${app}_${BUILD_NUMBER}_${timeStamp}"
-        } else {
-            verNum="OggUniverse_${BUILD_NUMBER}_${timeStamp}"
-        }
-    }
+    echo "tag version in github"
+    verNum="LM.${version}.v${BUILD_NUMBER}"
     println("TAG VERSION: " + verNum)
     sh """#!/bin/bash
     set -e
-    cd ${WORKSPACE}/build
     git tag ${verNum}
     git push origin ${verNum}
 
@@ -68,100 +40,62 @@ pipeline {
     agent any
     parameters {
         string(name: 'fromBranch', defaultValue: 'master', description: '(Please do not put "origin" with branch name.)')
-        choice(name: 'buildModule', choices: ['all', 'XE:crossingengine', 'PS:persistenceserver', 'SDS:staticdataserver', 'FG:fixgateway', 'CE:creditengine', 'FH:mktdatafeedhandler', 'TDB:tradedbwriter', 'TN:tradenotification', 'RG:rest_gateway', 'FM:fixmultiplexer'], description: '(buildModule "all" will be done from master)')
     }
 
     environment {
-        SOURCE_DIR="**/**/rpm/**/RPMS/*"
-        TARGET_BUCKET="liquimatch-${rpm}-repo"
-        TARGET_DIR = "/rpm/${TARGET_BUCKET}"
+        //fromBranch="master"
+        SOURCE_DIR="${WORKSPACE}/rpmbuild/RPMS/*"
+        TARGET_BUCKET="bosonic-lm-repo"
+        TARGET_DIR="/rpm/${TARGET_BUCKET}"
         CACHE_DIR="${TARGET_DIR}/dev-cache"
         PKG_DIR="${TARGET_DIR}/pkg-info"
-        ROLLBACK_DIR="/rpm/rollback/it/ogguniverse"
+        ROLLBACK_DIR="/rpm/rollback/it/bosonic-lm"
     }
 
     stages {
-        stage('Verify inputs') {
-            steps {
-                script {
-                    if ("${fromBranch}".isEmpty()) {
-                        println("ERROR: Parameters can not be empty.")
-                        println("Branch Passed:<<${fromBranch}>>")
-                        sh 'exit 1'
-                    }
-                }
-            }
-        }
-
-        stage('Initialize the variables') {
-            steps {
-                script {
-                    app = sh(script:"echo ${buildModule} | cut -d \":\" -f1", returnStdout:true).trim()
-                    subModule = sh(script:"echo ${buildModule} | cut -d \":\" -f2", returnStdout:true).trim()
-                    timeStamp = sh(script:"TZ=\":America/Los_Angeles\" date +\"%Y%m%d\"", returnStdout:true).trim()
-                }
-            }            
-        }
-        
         stage('Checkout branch') {
             steps {
+                println("Workspace Cleanup")
+                cleanWs()
                 sh """#!/bin/bash
                 set -e
-                if [ -d ${otcxn_dir} ]; then 
-                    rm -rf ${otcxn_dir};
-                    echo "BT libs removed from <<${otcxn_dir}>>"
+                if [ -d ${bosonic_dir} ]; then 
+                    rm -rf ${bosonic_dir};
+                    echo "BT libs removed from <<${bosonic_dir}>>"
                 fi
-                repo init -u git@github.com:otcxn/otcxn-rfq-build.git -b ogg_universe -m default.xml
-                repo sync
-                repo forall -c "git checkout master"
-                repo forall -c "git pull"
                 """
+                git branch: "${fromBranch}", url: 'https://github.com/otcxn/bosonic-lm.git'
+            }
+        }
+
+        stage('Release') {
+            steps {
                 script {
-                    if ("${buildModule}" != "all") {
-                        checkoutBranch()
-                    }
+                    snap_version = sh(script:"mvn help:evaluate -Dexpression=project.version -q -DforceStdout", returnStdout:true).trim()
+                    version = sh(script:"echo $snap_version | cut -d '-' -f1", returnStdout:true).trim()
+                    
+                    println("RELEASE BOSONIC LM from '${fromBranch}' branch....")
+                    sh "mvn clean -DskipTests -Darguments=-DskipTests release:prepare --batch-mode"
+                    sh "mvn -DskipTests -Darguments=-DskipTests release:perform -B -s settings.xml"
+
+                    //println("RELEASE VERSION: " + version)
+                    commit = sh(script:"git rev-parse --short HEAD", returnStdout:true).trim()
+                    gitTagVersion()
                 }
             }
         }
 
-        stage('Build all Modules') {
-            when {
-                expression { buildModule == 'all' }
-            }
+        stage('Create RPM package') {
             steps {
-                script {
-                    println("Building all LM Modules from 'master' branch....")
-                    //sh "mvn --version"
-                    println("RUNNING 'mvn clean deploy'")
-                    sh "mvn clean deploy -DskipTests -U -s /var/lib/jenkins/.m2/settings.xml"
-                }
-            }
-        }
+                git branch: "master", url: 'https://github.com/otcxn/devops-tools.git'
+                sh "./rpm/build_bosonic-lm.sh ${commit} ${version}"
 
-        stage('Build subModule') {
-            when {
-                expression { buildModule != 'all' }
-            }
-            steps {
-                script {
-                    println("Building LM ${subModule}....")
-                    //sh "mvn --version"
-                    println("RUNNING 'mvn clean deploy' for ${app}")
-                    sh "mvn clean deploy -pl ${subModule} -DskipTests -U -s ~/.m2/settings.xml --also-make"
-                }
-            }
-        }
-
-        stage('Publish') {
-            steps {
-                echo "Publishing to ${rpm}.."
+                println("Publishing RPM..")
 
                 script{
                     def repo = ['s3cmd', 'createrepo']
                     for (int i = 0; i < repo.size(); ++i) {
-                        echo "Testing the ${repo[i]} repo"
                         check = sh(script:"which ${repo[i]}", returnStdout:true).trim()
-                        echo check
                     }
 
                     if ("${SOURCE_DIR}".isEmpty()) {
@@ -181,7 +115,12 @@ pipeline {
                 }
 
                 publishPackage()
-                gitTagVersion()
+            }
+        }
+
+        stage('Version Info') {
+            steps {
+                println("RELEASE VERSION: " + version)
             }
         }
     }
